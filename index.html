@@ -3,104 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CheatForge // Real Builds</title>
+<title>CheatForge // Foundry</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
+:root{--bg:#05060a;--panel:rgba(14,16,24,.72);--line:#1c2030;--cy:#00f0ff;--mg:#bd00ff;--gr:#00ff88;--rd:#ff3860;--tx:#dfe4ee;--dim:#5c6478}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0f;color:#e0e0e0;font-family:monospace;min-height:100vh}
-.top{padding:28px;text-align:center;border-bottom:1px solid #222}
-.top h1{font-size:34px;background:linear-gradient(90deg,#00f0ff,#bd00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.top p{color:#666;margin-top:6px;font-size:12px}
-.grid{display:grid;grid-template-columns:300px 1fr 320px;gap:16px;padding:20px}
-.panel{background:#12121a;border:1px solid #222;border-radius:8px;padding:16px;overflow-y:auto;max-height:86vh}
-h2{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
-.game{padding:12px;margin:6px 0;background:#1a1a24;border:1px solid #222;border-radius:6px;cursor:pointer;transition:.2s}
-.game:hover{border-color:#00f0ff}
-.game.active{border-color:#00f0ff;background:rgba(0,240,255,.05)}
-.game b{color:#00f0ff}
-.badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:3px;margin-top:4px}
-.b-mem{background:rgba(0,240,255,.15);color:#00f0ff}
-.b-screen{background:rgba(189,0,255,.15);color:#d580ff}
-.b-input{background:rgba(0,255,136,.15);color:#00ff88}
-.feat{padding:10px;margin:6px 0;background:#1a1a24;border:1px solid #222;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px}
-.feat.on{border-color:#00f0ff;background:rgba(0,240,255,.05)}
-.chk{width:16px;height:16px;border:2px solid #444;border-radius:3px;flex-shrink:0}
-.feat.on .chk{background:#00f0ff;border-color:#00f0ff}
-.btn{width:100%;padding:14px;margin:8px 0;background:linear-gradient(90deg,#00f0ff,#bd00ff);border:none;border-radius:6px;color:#000;font-weight:bold;cursor:pointer;font-size:13px}
-.btn:hover{opacity:.9}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.term{background:#000;border:1px solid #222;border-radius:6px;padding:10px;font-size:11px;height:150px;overflow-y:auto;margin-top:10px;display:none}
+body{background:var(--bg);color:var(--tx);font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;min-height:100vh;overflow-x:hidden}
+.bg{position:fixed;inset:0;background:
+ radial-gradient(900px 500px at 15% -10%,rgba(0,240,255,.10),transparent 60%),
+ radial-gradient(800px 500px at 90% 110%,rgba(189,0,255,.10),transparent 60%),
+ repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.025) 39px 40px),
+ repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.025) 39px 40px);z-index:-2}
+.scan{position:fixed;inset:0;background:linear-gradient(180deg,transparent,rgba(0,240,255,.05),transparent);height:220px;animation:scan 7s linear infinite;z-index:-1;pointer-events:none}
+@keyframes scan{0%{transform:translateY(-240px)}100%{transform:translateY(105vh)}}
+.hidden{display:none!important}
+.logo{font-size:40px;font-weight:800;letter-spacing:-1px;color:#fff}
+.logo span{background:linear-gradient(90deg,var(--cy),var(--mg));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo.small{font-size:18px}
+/* ---- gate ---- */
+#gate{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:38px;padding:30px}
+.gate-head{text-align:center}
+.gate-head .sub{color:var(--dim);margin-top:10px;font-size:12px;letter-spacing:3px;text-transform:uppercase}
+.gate-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,420px));gap:22px;width:100%;max-width:900px}
+.pcard{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:30px;cursor:pointer;transition:.25s;backdrop-filter:blur(14px);overflow:hidden}
+.pcard:before,.pcard:after{content:'';position:absolute;width:18px;height:18px;border:2px solid var(--cy);opacity:.7}
+.pcard:before{top:8px;left:8px;border-right:0;border-bottom:0}
+.pcard:after{bottom:8px;right:8px;border-left:0;border-top:0}
+.pcard:hover{transform:translateY(-6px);border-color:var(--cy);box-shadow:0 18px 50px rgba(0,240,255,.15)}
+.pcard.and:hover{border-color:var(--gr);box-shadow:0 18px 50px rgba(0,255,136,.12)}
+.pcard.and:before,.pcard.and:after{border-color:var(--gr)}
+.pcard h3{font-size:26px;margin-bottom:6px}
+.pcard .os{color:var(--dim);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
+.pcard ul{list-style:none;font-size:12px;color:#aab}
+.pcard li{padding:5px 0;border-bottom:1px dashed #1a1e2c}
+.pcard li b{color:var(--cy)}
+.pcard.and li b{color:var(--gr)}
+.pcard .go{margin-top:18px;font-size:12px;color:var(--cy);letter-spacing:2px}
+.pcard.and .go{color:var(--gr)}
+.gate-foot{font-size:11px;color:var(--dim);display:flex;gap:10px;align-items:center}
+/* ---- app ---- */
+header{display:flex;align-items:center;gap:16px;padding:14px 22px;border-bottom:1px solid var(--line);background:rgba(5,6,10,.8);backdrop-filter:blur(10px);position:sticky;top:0;z-index:5}
+#back{background:none;border:1px solid var(--line);color:var(--dim);padding:7px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px}
+#back:hover{color:var(--cy);border-color:var(--cy)}
+.pill{font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:5px 10px;border-radius:20px;border:1px solid var(--cy);color:var(--cy)}
+.pill.and{border-color:var(--gr);color:var(--gr)}
+.dotwrap{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim)}
+#dot{width:8px;height:8px;border-radius:50%;background:var(--dim);display:inline-block}
+#dot.ok{background:var(--gr);box-shadow:0 0 10px var(--gr)}
+#dot.bad{background:var(--rd);box-shadow:0 0 10px var(--rd)}
+main{display:grid;grid-template-columns:290px 1fr 340px;gap:16px;padding:18px;max-width:1500px;margin:0 auto}
+@media(max-width:1100px){main{grid-template-columns:1fr}}
+.rail,.stage,.console{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;backdrop-filter:blur(12px)}
+.stage,.console{position:relative}
+.stage:before,.console:before{content:'';position:absolute;top:6px;right:6px;width:14px;height:14px;border-top:2px solid var(--mg);border-right:2px solid var(--mg);opacity:.6}
+h2{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.game{padding:11px 12px;margin:6px 0;background:#10131d;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.15s}
+.game:hover{border-color:#33405e;transform:translateX(3px)}
+.game.active{border-color:var(--cy);background:rgba(0,240,255,.06);box-shadow:inset 3px 0 0 var(--cy)}
+.game b{color:#fff;font-size:13px}
+.game small{display:block;color:var(--dim);font-size:10px;margin-top:2px}
+.badge{display:inline-block;font-size:8px;letter-spacing:1px;padding:2px 6px;border-radius:3px;margin-top:5px}
+.b-mem{background:rgba(0,240,255,.14);color:var(--cy)}
+.b-screen{background:rgba(189,0,255,.14);color:#d580ff}
+.b-input{background:rgba(0,255,136,.14);color:var(--gr)}
+.b-pend{background:rgba(255,56,96,.14);color:var(--rd)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.feat{padding:12px;background:#10131d;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.15s;position:relative}
+.feat:hover{border-color:#33405e}
+.feat.on{border-color:var(--cy);background:rgba(0,240,255,.07)}
+.feat.on:after{content:'✓';position:absolute;top:8px;right:10px;color:var(--cy);font-weight:700}
+.feat b{font-size:12px;color:#fff;display:block}
+.feat small{color:var(--dim);font-size:10px}
+.feat.pend{opacity:.55;cursor:not-allowed}
+.mech{margin-top:14px;font-size:10px;color:var(--dim);line-height:1.6;border-top:1px dashed #1a1e2c;padding-top:10px}
+.cntrow{font-size:12px;color:var(--dim);margin-bottom:10px}
+.cntrow b{color:var(--cy);font-size:16px}
+#cfgprev{background:#000;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:10px;color:#7ee787;height:150px;overflow:auto;white-space:pre-wrap;margin-bottom:12px}
+.btn{width:100%;padding:15px;background:linear-gradient(90deg,var(--cy),var(--mg));border:0;border-radius:8px;color:#000;font-weight:800;font-size:12px;letter-spacing:2px;cursor:pointer;font-family:inherit;transition:.2s;box-shadow:0 8px 30px rgba(0,240,255,.25)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,240,255,.4)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.and{background:linear-gradient(90deg,var(--gr),#00b3ff)}
+.term{background:#000;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:10px;height:130px;overflow-y:auto;margin-top:12px;display:none}
 .term.show{display:block}
-.term .ok{color:#00ff88}
-.term .err{color:#ff3860}
-.note{font-size:10px;color:#555;margin-top:10px;line-height:1.5}
-.cnt{color:#00f0ff}
+.term .ok{color:var(--gr)}
+.term .err{color:var(--rd)}
+.note{font-size:9px;color:#3d4356;margin-top:10px;word-break:break-all}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#0c0f16;border:1px solid var(--cy);color:var(--tx);padding:12px 22px;border-radius:8px;font-size:12px;transition:.3s;z-index:99;box-shadow:0 10px 40px rgba(0,240,255,.2)}
+#toast.show{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
-<div class="top"><h1>CHEATFORGE</h1><p>real per-game binaries · compiled in CI-free box · no stubs</p></div>
-<div class="grid">
-<div class="panel"><h2>Game</h2><div id="games"></div></div>
-<div class="panel"><h2>Features compiled into this binary</h2><div id="feats"></div><div class="note" id="mech"></div></div>
-<div class="panel">
-<h2>Build</h2>
-<div style="font-size:12px;margin-bottom:8px">selected: <span class="cnt" id="cnt">0</span></div>
-<button class="btn" id="build">DOWNLOAD REAL CHEAT (.zip)</button>
-<div class="term" id="term"></div>
-<div class="note" id="src"></div>
+<div class="bg"></div><div class="scan"></div>
+<div id="gate">
+  <div class="gate-head">
+    <div class="logo">CHEAT<span>FORGE</span></div>
+    <div class="sub">external cheat foundry · select platform</div>
+  </div>
+  <div class="gate-cards">
+    <div class="pcard" data-p="win">
+      <h3>WINDOWS</h3><div class="os">x86_64 · pe32+ · external</div>
+      <ul>
+        <li><b>9</b> live per-game binaries in builds/</li>
+        <li>memory tier · screen+input tier · input tier</li>
+        <li>zip: real .exe + config.json + readme</li>
+        <li>offsets auto-pulled at compile time</li>
+      </ul>
+      <div class="go">ENTER FOUNDRY →</div>
+    </div>
+    <div class="pcard and" data-p="and">
+      <h3>ANDROID</h3><div class="os">arm64-v8a · root · /proc/mem</div>
+      <ul>
+        <li><b>6</b> mobile titles in catalog</li>
+        <li>ndk cross-compile pipeline</li>
+        <li>trainer .so + injector apk</li>
+        <li>binaries: pending first ndk build</li>
+      </ul>
+      <div class="go">ENTER CATALOG →</div>
+    </div>
+  </div>
+  <div class="gate-foot"><i id="gdot" style="width:8px;height:8px;border-radius:50%;background:#5c6478;display:inline-block"></i><span id="gstat">probing builds…</span></div>
 </div>
+<div id="app" class="hidden">
+  <header>
+    <button id="back">‹ PLATFORM</button>
+    <div class="logo small">CHEAT<span>FORGE</span></div>
+    <div class="pill" id="platpill">windows</div>
+    <div class="dotwrap"><i id="dot"></i><span id="dottxt"></span></div>
+  </header>
+  <main>
+    <aside class="rail"><h2>games</h2><div id="games"></div></aside>
+    <section class="stage"><h2>compiled features <span class="badge" id="tierbadge"></span></h2><div id="feats" class="fgrid"></div><div class="mech" id="mech"></div></section>
+    <aside class="console">
+      <h2>build console</h2>
+      <div class="cntrow">selected <b id="cnt">0</b>/<span id="tot">0</span></div>
+      <pre id="cfgprev"></pre>
+      <button class="btn" id="build">DOWNLOAD REAL CHEAT (.zip)</button>
+      <div class="term" id="term"></div>
+      <div class="note" id="src"></div>
+    </aside>
+  </main>
 </div>
+<div id="toast"></div>
 <script>
 const RAW="https://raw.githubusercontent.com/lox-clou/cheatforge/main/builds/";
-const GAMES={
-cs2:{n:"Counter-Strike 2",proc:"cs2.exe",tier:"mem",mech:"memory tier: ReadProcessMemory + view matrix W2S, offsets pulled from cs2-dumper at compile time. write-handles open only per-write, read jitter 2-6ms.",f:[["esp","ESP boxes + HP","memory read"],["aimbot","Aimbot","mouse-input aim"],["triggerbot","Triggerbot","crosshair entity id"],["bhop","Bhop","forceJump write"],["rcs","RCS","aim punch compensation"],["radar","Radar","minimap dots"],["remove_flash","No flash","flash alpha reset"]]},
-valorant:{n:"Valorant",proc:"VALORANT-Win64-Shipping.exe",tier:"screen",mech:"screen+input tier: zero memory reads. targets come from enemy outline color, aim/trigger via input. needs borderless + enemy highlight on.",f:[["esp","Color ESP","outline capture"],["triggerbot","Triggerbot","crosshair pixel"],["rcs","Recoil macro","pattern per spray"]]},
-rust:{n:"Rust",proc:"RustClient.exe",tier:"input",mech:"input tier: zero memory reads, pure input-level macros. works in any render mode.",f:[["rcs","Recoil macro","AK pattern"],["rapid_fire","Rapid fire","click repeater"],["bhop","Bhop","input hop"]]},
-apex:{n:"Apex Legends",proc:"r5apex.exe",tier:"screen",mech:"screen+input tier: enemy glow as target source, zero memory reads. needs borderless + glow on.",f:[["esp","Color ESP","glow capture"],["aimbot","Color aim","glow centroid"],["triggerbot","Triggerbot","crosshair pixel"]]},
-pubg:{n:"PUBG",proc:"TslGame.exe",tier:"screen",mech:"screen+input tier: enemy outline as target source, zero memory reads. needs borderless + outline on.",f:[["esp","Color ESP","outline capture"],["triggerbot","Triggerbot","crosshair pixel"],["rcs","Recoil macro","M416 pattern"]]},
+const WIN={
+cs2:{n:"Counter-Strike 2",proc:"cs2.exe",tier:"mem",mech:"memory tier: ReadProcessMemory + view matrix W2S. offsets pulled from cs2-dumper at compile time. write-handles open per-write only, read jitter 2-6ms.",f:[["esp","ESP boxes + HP","memory read"],["aimbot","Aimbot","mouse-input aim"],["triggerbot","Triggerbot","crosshair entity id"],["bhop","Bhop","forceJump write"],["rcs","RCS","aim punch compensation"],["radar","Radar","minimap dots"],["remove_flash","No flash","flash alpha reset"]]},
+valorant:{n:"Valorant",proc:"VALORANT-Win64-Shipping.exe",tier:"screen",mech:"screen+input tier: zero memory reads. enemy outline color is the target source. needs borderless + enemy highlight on.",f:[["esp","Color ESP","outline capture"],["triggerbot","Triggerbot","crosshair pixel"],["rcs","Recoil macro","spray pattern"]]},
+rust:{n:"Rust",proc:"RustClient.exe",tier:"input",mech:"input tier: zero memory reads, pure input-level macros. any render mode.",f:[["rcs","Recoil macro","AK pattern"],["rapid_fire","Rapid fire","click repeater"],["bhop","Bhop","input hop"]]},
+apex:{n:"Apex Legends",proc:"r5apex.exe",tier:"screen",mech:"screen+input tier: enemy glow is the target source, zero memory reads. needs borderless + glow on.",f:[["esp","Color ESP","glow capture"],["aimbot","Color aim","glow centroid"],["triggerbot","Triggerbot","crosshair pixel"]]},
+pubg:{n:"PUBG",proc:"TslGame.exe",tier:"screen",mech:"screen+input tier: enemy outline is the target source, zero memory reads. needs borderless + outline on.",f:[["esp","Color ESP","outline capture"],["triggerbot","Triggerbot","crosshair pixel"],["rcs","Recoil macro","M416 pattern"]]},
 fortnite:{n:"Fortnite",proc:"FortniteClient-Win64-Shipping.exe",tier:"input",mech:"input tier: zero memory reads, pure input-level macros.",f:[["rcs","Recoil macro","AR pattern"],["rapid_fire","Rapid fire","click repeater"],["bhop","Bhop","input hop"]]},
 gta5:{n:"GTA V",proc:"GTA5.exe",tier:"input",mech:"input tier: zero memory reads, pure input-level macros.",f:[["rapid_fire","Rapid fire","click repeater"],["rcs","Recoil macro","generic pattern"]]},
-minecraft:{n:"Minecraft",proc:"javaw.exe",tier:"screen",mech:"screen+input tier: white nametags as target source, zero memory reads (JVM heap untouched).",f:[["esp","Color ESP","nametag capture"],["triggerbot","Triggerbot","crosshair pixel"],["rapid_fire","Rapid fire","CPS boost"],["bhop","Bhop","input hop"]]},
-tf2:{n:"Team Fortress 2",proc:"hl2.exe",tier:"screen",mech:"screen+input tier: red team color as target source, zero memory reads.",f:[["esp","Color ESP","team color capture"],["triggerbot","Triggerbot","crosshair pixel"],["bhop","Bhop","input hop"]]}
+minecraft:{n:"Minecraft",proc:"javaw.exe",tier:"screen",mech:"screen+input tier: white nametags are the target source. JVM heap untouched.",f:[["esp","Color ESP","nametag capture"],["triggerbot","Triggerbot","crosshair pixel"],["rapid_fire","Rapid fire","CPS boost"],["bhop","Bhop","input hop"]]},
+tf2:{n:"Team Fortress 2",proc:"hl2.exe",tier:"screen",mech:"screen+input tier: red team color is the target source, zero memory reads.",f:[["esp","Color ESP","team color capture"],["triggerbot","Triggerbot","crosshair pixel"],["bhop","Bhop","input hop"]]}
 };
-let cur="cs2",sel={};Object.keys(GAMES).forEach(k=>sel[k]=new Set());
+const AND={
+pubgm:{n:"PUBG Mobile",proc:"com.tencent.ig",tier:"pend",mech:"root tier plan: /proc/pid/mem read/write from arm64 trainer .so, injector via ptrace or magisk module. awaits first NDK build.",f:[["esp","ESP","planned"],["aimbot","Aimbot","planned"],["norecoil","No recoil","planned"],["speed","Speed hack","planned"]]},
+freefire:{n:"Free Fire",proc:"com.dts.freefireth",tier:"pend",mech:"root tier plan: same /proc/mem pipeline, per-title offset table.",f:[["esp","ESP","planned"],["aimbot","Aimbot","planned"],["headshot","Headshot mode","planned"]]},
+codm:{n:"CoD Mobile",proc:"com.activision.callofduty.shooter",tier:"pend",mech:"root tier plan: /proc/mem + input injection via /dev/input.",f:[["esp","ESP","planned"],["aimbot","Aimbot","planned"],["norecoil","No recoil","planned"]]},
+mcpe:{n:"Minecraft PE",proc:"com.mojang.minecraftpe",tier:"pend",mech:"root tier plan: libminecraftpe.so offsets table.",f:[["xray","Xray","planned"],["fly","Fly","planned"],["killaura","Kill aura","planned"]]},
+roblox:{n:"Roblox",proc:"com.roblox.client",tier:"pend",mech:"root tier plan: lua-level executor via script hook.",f:[["esp","ESP","planned"],["speed","Speed","planned"],["fly","Fly","planned"]]},
+brawl:{n:"Brawl Stars",proc:"com.supercell.brawlstars",tier:"pend",mech:"root tier plan: input macro tier, no memory reads.",f:[["macro","Skill macro","planned"],["speed","Speed","planned"]]}
+};
+let plat="win",cur="cs2",sel={};
+Object.keys(WIN).forEach(k=>sel[k]=new Set());
+Object.keys(AND).forEach(k=>sel[k]=new Set());
 const $=id=>document.getElementById(id);
-function R(){
-$("games").innerHTML=Object.entries(GAMES).map(([k,v])=>`<div class="game ${k===cur?'active':''}" data-g="${k}"><b>${v.n}</b><br><small style="color:#666">${v.proc}</small><br><span class="badge b-${v.tier}">${v.tier==="mem"?"MEMORY RPM/WPM":v.tier==="screen"?"SCREEN+INPUT":"INPUT ONLY"}</span></div>`).join("");
-document.querySelectorAll(".game").forEach(e=>e.onclick=()=>{cur=e.dataset.g;R()});
-const v=GAMES[cur];
-$("feats").innerHTML=v.f.map(f=>`<div class="feat ${sel[cur].has(f[0])?'on':''}" data-n="${f[0]}"><div class="chk"></div><div><b>${f[1]}</b><br><small style="color:#666">${f[2]}</small></div></div>`).join("");
-document.querySelectorAll(".feat").forEach(e=>e.onclick=()=>{const n=e.dataset.n;sel[cur].has(n)?sel[cur].delete(n):sel[cur].add(n);R()});
-$("mech").textContent=v.mech;
-$("cnt").textContent=sel[cur].size;
-$("src").textContent="source: "+RAW+"CheatForge_"+cur+".exe";
+const T=()=>plat==="win"?WIN:AND;
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
+function probe(){
+fetch(RAW+"CheatForge_cs2.exe?ts="+Date.now(),{method:"HEAD"}).then(r=>{
+$("gdot").style.background=r.ok?"#00ff88":"#ff3860";
+$("gstat").textContent=r.ok?"windows builds: online":"windows builds: missing in repo";
+$("dot").className=r.ok?"ok":"bad";$("dottxt").textContent=r.ok?"builds online":"builds missing";
+}).catch(()=>{$("gstat").textContent="network error";$("dot").className="bad"});
 }
-function log(m,t){const T=$("term");T.classList.add("show");const d=document.createElement("div");d.className=t||"";d.textContent="> "+m;T.appendChild(d);T.scrollTop=T.scrollHeight}
+function R(){
+const G=T();
+$("platpill").textContent=plat==="win"?"windows · x86_64":"android · arm64";
+$("platpill").className="pill"+(plat==="and"?" and":"");
+$("games").innerHTML=Object.entries(G).map(([k,v])=>`<div class="game ${k===cur?'active':''}" data-g="${k}"><b>${v.n}</b><small>${v.proc}</small><span class="badge b-${v.tier}">${v.tier==="mem"?"MEMORY":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT":"PENDING"}</span></div>`).join("");
+document.querySelectorAll(".game").forEach(e=>e.onclick=()=>{cur=e.dataset.g;R()});
+const v=G[cur];
+$("tierbadge").className="badge b-"+v.tier;
+$("tierbadge").textContent=v.tier==="mem"?"MEMORY RPM/WPM":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT ONLY":"NDK PENDING";
+$("feats").innerHTML=v.f.map(f=>`<div class="feat ${sel[cur].has(f[0])?'on':''} ${plat==='and'?'pend':''}" data-n="${f[0]}"><b>${f[1]}</b><small>${f[2]}</small></div>`).join("");
+document.querySelectorAll(".feat").forEach(e=>e.onclick=()=>{
+if(plat==="and"){toast("android binaries pending first NDK build");return}
+const n=e.dataset.n;sel[cur].has(n)?sel[cur].delete(n):sel[cur].add(n);R()});
+$("mech").textContent=v.mech;
+$("cnt").textContent=sel[cur].size;$("tot").textContent=v.f.length;
+$("cfgprev").textContent=JSON.stringify({platform:plat,game:cur,tier:v.tier,features:[...sel[cur]]},null,1);
+const b=$("build");
+if(plat==="and"){b.className="btn and";b.disabled=true;b.textContent="ARM64 NDK PIPELINE — PENDING";$("src").textContent="pipeline: ndk cross-compile in codespaces → trainer .so + injector apk";
+}else{b.className="btn";b.disabled=false;b.textContent="DOWNLOAD REAL CHEAT (.zip)";$("src").textContent="source: "+RAW+"CheatForge_"+cur+".exe";}
+}
+function log(m,t){const T2=$("term");T2.classList.add("show");const d=document.createElement("div");d.className=t||"";d.textContent="> "+m;T2.appendChild(d);T2.scrollTop=T2.scrollHeight}
 $("build").onclick=async()=>{
 const feats=[...sel[cur]];
-if(!feats.length){log("select at least one compiled feature","err");return}
-const btn=$("build");btn.disabled=true;btn.textContent="PACKING...";
+if(!feats.length){log("select at least one compiled feature","err");toast("pick features first");return}
+const b=$("build");b.disabled=true;b.textContent="PACKING...";
 log("fetching compiled binary for "+cur+"...");
 let blob;
 try{
 const r=await fetch(RAW+"CheatForge_"+cur+".exe?ts="+Date.now());
 if(!r.ok)throw new Error("HTTP "+r.status);
 blob=await r.blob();
-}catch(e){log("fetch failed: "+e.message,"err");log("binary missing in builds/ - run cheat-fw/build.sh and push","err");btn.disabled=false;btn.textContent="DOWNLOAD REAL CHEAT (.zip)";return}
+}catch(e){log("fetch failed: "+e.message,"err");log("run cheat-fw/build.sh and push builds/","err");b.disabled=false;b.textContent="DOWNLOAD REAL CHEAT (.zip)";return}
 log("binary ok: "+(blob.size/1024).toFixed(0)+" KB");
-const cfg={game:cur,features:feats,tier:GAMES[cur].tier,built:Date.now()};
-const readme="CheatForge real build\n=====================\ngame: "+GAMES[cur].n+"\nprocess: "+GAMES[cur].proc+"\ntier: "+GAMES[cur].tier+"\nfeatures: "+feats.join(", ")+"\n\n1) unpack ALL files into ONE folder\n2) start the game\n3) run CheatForge_"+cur+".exe as administrator\n4) keep config.json next to the exe - it gates which features turn on\n5) END key = exit\n\n"+GAMES[cur].mech+"\n";
+const v=T()[cur];
+const cfg={game:cur,platform:"windows",features:feats,tier:v.tier,built:Date.now()};
+const readme="CheatForge real build\ngame: "+v.n+"\nprocess: "+v.proc+"\ntier: "+v.tier+"\nfeatures: "+feats.join(", ")+"\n\n1) unpack ALL files into ONE folder\n2) start the game\n3) run CheatForge_"+cur+".exe as administrator\n4) keep config.json next to the exe\n5) END key = exit\n\n"+v.mech+"\n";
 const zip=new JSZip();
 zip.file("CheatForge_"+cur+".exe",blob);
 zip.file("config.json",JSON.stringify(cfg,null,2));
 zip.file("README.txt",readme);
-log("zipping exe + config.json + README...");
+log("zipping exe + config + readme...");
 saveAs(await zip.generateAsync({type:"blob"}),"CheatForge_"+cur+"_real.zip");
 log("done: CheatForge_"+cur+"_real.zip","ok");
-btn.disabled=false;btn.textContent="DOWNLOAD REAL CHEAT (.zip)";
+toast("build packed: "+cur);
+b.disabled=false;b.textContent="DOWNLOAD REAL CHEAT (.zip)";
 };
-R();
+document.querySelectorAll(".pcard").forEach(c=>c.onclick=()=>{
+plat=c.dataset.p;cur=plat==="win"?"cs2":"pubgm";
+$("gate").classList.add("hidden");$("app").classList.remove("hidden");R();
+});
+$("back").onclick=()=>{$("app").classList.add("hidden");$("gate").classList.remove("hidden");probe()};
+probe();
 </script>
 </body>
 </html>
