@@ -1,0 +1,485 @@
+import json
+
+data = {
+  "cs2": {
+    "name": "Counter-Strike 2",
+    "sub": "Source 2 · Competitive",
+    "icon": "CS2",
+    "combat": [
+      ["aimbot","Silent aim","Bone priority + FOV smoothing"],
+      ["triggerbot","Auto-fire","Crosshair target detection"],
+      ["rcs","Recoil control","Pattern learning system"],
+      ["resolver","Anti-aim resolver","Fake angle detection"],
+      ["autowall","Penetration","Damage through surfaces"],
+      ["noscope","No-scope","Center crosshair lock"],
+      ["autofire","Hold-to-shoot","Automatic trigger"],
+      ["headshot_only","HS only","Force head aim"],
+      ["prediction","Bullet prediction","Target movement lead"],
+      ["hitbox_select","Hitbox selector","Head/chest/pelvis"]
+    ],
+    "visual": [
+      ["esp","ESP boxes","Box + skeleton + health"],
+      ["chams","Chams","Material override X-ray"],
+      ["glow","Glow","Team-based outline"],
+      ["world","World mod","Nightmode + skybox"],
+      ["remove_scope","Remove scope","No scope overlay"],
+      ["remove_flash","Remove flash","No flashbang effect"],
+      ["remove_smoke","Remove smoke","Smoke penetration"],
+      ["radar","Radar hack","Full map tracking"],
+      ["tracers","Tracers","Lines to enemies"],
+      ["health_bar","Health bars","ESP health display"],
+      ["name_esp","Name ESP","Player names"],
+      ["weapon_esp","Weapon ESP","Active weapon"],
+      ["distance","Distance","Range display"],
+      ["fov_circle","FOV circle","Aimbot FOV visual"]
+    ],
+    "movement": [
+      ["bhop","Bhop","Auto-hop on space"],
+      ["autostrafe","Autostrafe","Air strafe assist"],
+      ["fastduck","Fast duck","Instant crouch"],
+      ["edgebug","Edge bug","Perfect landing"],
+      ["infinite_duck","Inf duck","No speed penalty"],
+      ["slide_walk","Slide walk","Silent movement"],
+      ["speedhack","Speed","Movement multiplier"],
+      ["nofall","No fall","Fall damage cancel"]
+    ],
+    "misc": [
+      ["skinchanger","Skin changer","Knife/glove models"],
+      ["nametag","Name tag","Custom clan tag"],
+      ["autoaccept","Auto accept","Matchmaking auto"],
+      ["rank_reveal","Rank reveal","Show ranks"],
+      ["hit_sound","Hit sound","Custom hit marker"],
+      ["kill_say","Kill say","Auto chat on kill"],
+      ["auto_buy","Auto buy","Pistol round buy"],
+      ["recoil_crosshair","Recoil Xhair","Dynamic crosshair"],
+      ["thirdperson","Third person","Camera view"],
+      ["freecam","Freecam","Detach camera"]
+    ],
+    "anticheat": [
+      ["bypass_vac","VAC bypass","Signature spoof"],
+      ["bypass_faceit","FACEIT bypass","Client spoof"],
+      ["stream_proof","Stream proof","Hide from OBS"],
+      ["hwid_spoof","HWID spoof","Hardware ID change"],
+      ["ip_spoof","IP spoof","Network masking"]
+    ]
+  },
+  "valorant": {
+    "name": "Valorant",
+    "sub": "Vanguard · Tactical",
+    "icon": "VAL",
+    "combat": [
+      ["aimbot","Aimbot","Bone targeting"],
+      ["triggerbot","Triggerbot","Hitbox fire"],
+      ["silent_aim","Silent aim","Bullet redirect"],
+      ["no_recoil","No recoil","Perfect spray"],
+      ["autowall","Autowall","Penetration assist"],
+      ["prediction","Prediction","Movement lead"],
+      ["headshot","HS only","Force head aim"],
+      ["autofire","Auto fire","Hold to shoot"],
+      ["resolver","Resolver","Anti-aim fix"],
+      ["hitbox_select","Hitbox select","Target bones"]
+    ],
+    "visual": [
+      ["esp","ESP","Player boxes"],
+      ["glow","Glow","Through smoke"],
+      ["item_esp","Item ESP","Weapons/spike"],
+      ["fog_removal","Fog removal","Clear vision"],
+      ["remove_flash","No flash","Flash immunity"],
+      ["radar","Radar","Minimap dots"],
+      ["tracers","Tracers","Enemy lines"],
+      ["health_bar","Health","HP display"],
+      ["name_esp","Names","Player names"],
+      ["weapon_esp","Weapons","Active gun"],
+      ["distance","Distance","Range info"],
+      ["agent_esp","Agent icons","Character ID"],
+      ["spike_esp","Spike ESP","Spike location"],
+      ["fov_circle","FOV circle","Aimbot FOV"]
+    ],
+    "movement": [
+      ["autostrafe","Autostrafe","Air control"],
+      ["edgebug","Edge bug","Fall prevention"],
+      ["bunnyhop","Bhop","Jump assist"],
+      ["fastplant","Fast plant","Instant spike"],
+      ["speedhack","Speed","Move multiplier"],
+      ["nofall","No fall","Fall cancel"],
+      ["slide_walk","Slide walk","Silent move"],
+      ["teleport","Teleport","Waypoint jump"]
+    ],
+    "misc": [
+      ["autoaccept","Auto accept","Queue auto"],
+      ["stream_proof","Stream proof","Hide OBS"],
+      ["auto_buy","Auto buy","Weapon purchase"],
+      ["hit_sound","Hit sound","Hit marker"],
+      ["kill_say","Kill say","Auto chat"],
+      ["thirdperson","Third person","Camera view"],
+      ["freecam","Freecam","Detach camera"],
+      ["hwid_spoof","HWID spoof","Hardware mask"],
+      ["ip_spoof","IP spoof","Network mask"],
+      ["bypass_vanguard","Vanguard bypass","Kernel spoof"]
+    ]
+  },
+  "rust": {
+    "name": "Rust",
+    "sub": "EAC · Survival",
+    "icon": "RUST",
+    "combat": [
+      ["silent_aim","Silent aim","Bullet teleport"],
+      ["triggerbot","Triggerbot","Instant fire"],
+      ["recoil_script","Recoil script","Perfect pattern"],
+      ["autofire","Auto fire","Hold to shoot"],
+      ["spread_control","Spread control","Zero spread"],
+      ["prediction","Prediction","Bullet lead"],
+      ["headshot","HS only","Force head"],
+      ["autowall","Autowall","Penetration"],
+      ["resolver","Resolver","Anti-aim"],
+      ["hitbox_select","Hitbox select","Target bones"]
+    ],
+    "visual": [
+      ["player_esp","Player ESP","Name/HP/weapon"],
+      ["ore_esp","Ore ESP","Sulfur/metal/stone"],
+      ["stash_esp","Stash ESP","Loot detection"],
+      ["crosshair","Custom Xhair","Center dot"],
+      ["animal_esp","Animal ESP","Wildlife track"],
+      ["glow","Glow","Entity outline"],
+      ["tracers","Tracers","Enemy lines"],
+      ["health_bar","Health","HP display"],
+      ["name_esp","Names","Player names"],
+      ["weapon_esp","Weapons","Active gun"],
+      ["distance","Distance","Range info"],
+      ["fov_circle","FOV circle","Aimbot FOV"],
+      ["loot_beam","Loot beam","High-tier beam"],
+      ["chams","Chams","X-ray view"]
+    ],
+    "movement": [
+      ["always_day","Always day","Time override"],
+      ["admin_flag","Admin flag","Fake admin"],
+      ["no_fall","No fall","Fall cancel"],
+      ["speedhack","Speed","Move multiplier"],
+      ["fly","Fly","Creative flight"],
+      ["bhop","Bhop","Jump assist"],
+      ["teleport","Teleport","Waypoint jump"],
+      ["noclip","Noclip","Free movement"]
+    ],
+    "misc": [
+      ["autofarm","Auto farm","Resource gather"],
+      ["chat_spam","Chat spam","Message broadcast"],
+      ["fakelag","Fake lag","Packet manipulation"],
+      ["auto_smelt","Auto smelt","Ore processing"],
+      ["stream_proof","Stream proof","Hide OBS"],
+      ["hwid_spoof","HWID spoof","Hardware mask"],
+      ["ip_spoof","IP spoof","Network mask"],
+      ["bypass_eac","EAC bypass","Kernel spoof"],
+      ["hit_sound","Hit sound","Hit marker"],
+      ["thirdperson","Third person","Camera view"]
+    ]
+  },
+  "apex": {
+    "name": "Apex Legends",
+    "sub": "EAC · Battle Royale",
+    "icon": "AP",
+    "combat": [
+      ["aim_assist","Aim assist","Target magnetism"],
+      ["glow_esp","Glow ESP","Universal highlight"],
+      ["no_recoil","No recoil","Zero kick"],
+      ["prediction","Prediction","Bullet lead"],
+      ["rapid_fire","Rapid fire","Fire rate boost"],
+      ["triggerbot","Triggerbot","Hitbox fire"],
+      ["silent_aim","Silent aim","Bullet redirect"],
+      ["headshot","HS only","Force head"],
+      ["autowall","Autowall","Penetration"],
+      ["resolver","Resolver","Anti-aim"]
+    ],
+    "visual": [
+      ["item_esp","Item ESP","Loot tier filter"],
+      ["loot_beam","Loot beam","High-tier beam"],
+      ["skeleton","Skeleton","Bone tracking"],
+      ["death_box_esp","Death box","Box locations"],
+      ["ring_esp","Ring ESP","Next ring pos"],
+      ["glow","Glow","Entity outline"],
+      ["tracers","Tracers","Enemy lines"],
+      ["health_bar","Health","HP display"],
+      ["name_esp","Names","Player names"],
+      ["weapon_esp","Weapons","Active gun"],
+      ["distance","Distance","Range info"],
+      ["fov_circle","FOV circle","Aimbot FOV"],
+      ["chams","Chams","X-ray view"],
+      ["radar","Radar","Map tracking"]
+    ],
+    "movement": [
+      ["tapstrafe","Tap strafe","Instant direction"],
+      ["superglide","Super glide","Wall jump momentum"],
+      ["wall_jump","Wall jump","Enhanced climb"],
+      ["slide_jump","Slide jump","Perfect slide"],
+      ["bhop","Bhop","Jump assist"],
+      ["speedhack","Speed","Move multiplier"],
+      ["fly","Fly","Creative flight"],
+      ["nofall","No fall","Fall cancel"]
+    ],
+    "misc": [
+      ["fps_unlock","FPS unlock","Remove cap"],
+      ["fake_lag","Fake lag","Server desync"],
+      ["quick_exit","Quick exit","Lobby drop"],
+      ["auto_ping","Auto ping","Enemy alert"],
+      ["stream_proof","Stream proof","Hide OBS"],
+      ["hwid_spoof","HWID spoof","Hardware mask"],
+      ["ip_spoof","IP spoof","Network mask"],
+      ["bypass_eac","EAC bypass","Kernel spoof"],
+      ["hit_sound","Hit sound","Hit marker"],
+      ["thirdperson","Third person","Camera view"]
+    ]
+  },
+  "gta5": {
+    "name": "GTA V",
+    "sub": "Online / Story",
+    "icon": "G5",
+    "combat": [
+      ["godmode","God mode","Infinite HP"],
+      ["infinite_ammo","Inf ammo","No reload"],
+      ["explosive_melee","Explosive melee","Area damage"],
+      ["one_shot","One shot","Instant kill"],
+      ["fire_ammunition","Fire ammo","Burning bullets"],
+      ["explosive_ammo","Explosive ammo","Boom bullets"],
+      ["rapid_fire","Rapid fire","Fire rate"],
+      ["triggerbot","Triggerbot","Auto fire"],
+      ["aimbot","Aimbot","Auto aim"],
+      ["no_recoil","No recoil","Zero kick"]
+    ],
+    "visual": [
+      ["vehicle_esp","Vehicle ESP","Car model/plate"],
+      ["money_drop","Money drop","Cash effect"],
+      ["custom_skins","Custom skins","Model override"],
+      ["player_esp","Player ESP","Name/HP"],
+      ["glow","Glow","Entity outline"],
+      ["tracers","Tracers","Enemy lines"],
+      ["health_bar","Health","HP display"],
+      ["name_esp","Names","Player names"],
+      ["weapon_esp","Weapons","Active gun"],
+      ["distance","Distance","Range info"],
+      ["chams","Chams","X-ray view"],
+      ["radar","Radar","Map tracking"],
+      ["fov_circle","FOV circle","Aimbot FOV"],
+      ["nightmode","Nightmode","Dark mode"]
+    ],
+    "movement": [
+      ["super_jump","Super jump","High leap"],
+      ["fast_run","Fast run","Sprint boost"],
+      ["noclip","Noclip","Free movement"],
+      ["teleport","Teleport","Waypoint jump"],
+      ["fly","Fly","Creative flight"],
+      ["speedhack","Speed","Move multiplier"],
+      ["bhop","Bhop","Jump assist"],
+      ["nofall","No fall","Fall cancel"]
+    ],
+    "misc": [
+      ["recovery","Recovery","RP/money inject"],
+      ["troll","Troll","Vehicle spawn"],
+      ["auto_heist","Auto heist","Mission auto"],
+      ["spawn_vehicle","Spawn car","Vehicle spawn"],
+      ["weather_control","Weather","Change weather"],
+      ["time_control","Time","Change time"],
+      ["stream_proof","Stream proof","Hide OBS"],
+      ["hwid_spoof","HWID spoof","Hardware mask"],
+      ["ip_spoof","IP spoof","Network mask"],
+      ["bypass_anticheat","AC bypass","Kernel spoof"]
+    ]
+  },
+  "minecraft": {
+    "name": "Minecraft",
+    "sub": "Java · Multiplayer",
+    "icon": "MC",
+    "combat": [
+      ["killaura","Kill aura","Auto-attack CPS"],
+      ["reach","Reach","6 block hitbox"],
+      ["autopot","Auto pot","Self-heal"],
+      ["crits","Crits","Auto crit jump"],
+      ["velocity","Velocity","Knockback reduce"],
+      ["autoclicker","Auto clicker","CPS boost"],
+      ["triggerbot","Triggerbot","Auto fire"],
+      ["aimbot","Aimbot","Auto aim"],
+      ["backtrack","Backtrack","Hit regression"],
+      ["bow_aimbot","Bow aimbot","Arrow aim"]
+    ],
+    "visual": [
+      ["xray","Xray","Ore highlight"],
+      ["esp","ESP","Entity tracking"],
+      ["chams","Chams","Model color"],
+      ["tracers","Tracers","Lines to target"],
+      ["nametags","Nametags","Name ESP"],
+      ["health_bar","Health","HP display"],
+      ["armor_status","Armor status","Durability"],
+      ["item_esp","Item ESP","Loot highlight"],
+      ["chest_esp","Chest ESP","Chest location"],
+      ["player_esp","Player ESP","Name/HP"],
+      ["glow","Glow","Entity outline"],
+      ["fov_circle","FOV circle","Aimbot FOV"],
+      ["block_overlay","Block overlay","Highlight"],
+      ["trails","Trails","Movement trails"]
+    ],
+    "movement": [
+      ["fly","Fly","Creative flight"],
+      ["speed","Speed","Sprint boost"],
+      ["nofall","No fall","Fall cancel"],
+      ["step","Step","Auto climb"],
+      ["long_jump","Long jump","Distance boost"],
+      ["bhop","Bhop","Jump assist"],
+      ["scaffold","Scaffold","Auto place"],
+      ["parkour","Parkour","Auto jump"]
+    ],
+    "misc": [
+      ["autotool","Auto tool","Best tool select"],
+      ["freecam","Freecam","Detach camera"],
+      ["cheststealer","Chest steal","Auto loot"],
+      ["inventory_manager","Inv manager","Auto sort"],
+      ["auto_eat","Auto eat","Food manage"],
+      ["auto_armor","Auto armor","Equip best"],
+      ["stream_proof","Stream proof","Hide OBS"],
+      ["hwid_spoof","HWID spoof","Hardware mask"],
+      ["ip_spoof","IP spoof","Network mask"],
+      ["bypass_anticheat","AC bypass","Kernel spoof"]
+    ]
+  },
+  "tf2": {
+    "name": "Team Fortress 2",
+    "sub": "Source · Casual",
+    "icon": "TF2",
+    "combat": [
+      ["aimbot","Aimbot","Hitscan prediction"],
+      ["triggerbot","Triggerbot","Class delay"],
+      ["backstab","Backstab","Auto stab"],
+      ["ubercharge","Ubercharge","Auto deploy"],
+      ["no_recoil","No recoil","Zero kick"],
+      ["rapid_fire","Rapid fire","Fire rate"],
+      ["autowall","Autowall","Penetration"],
+      ["prediction","Prediction","Bullet lead"],
+      ["headshot","HS only","Force head"],
+      ["resolver","Resolver","Anti-aim"]
+    ],
+    "visual": [
+      ["esp","ESP","Class icons"],
+      ["glow","Glow","Outline geometry"],
+      ["bullettracers","Bullet tracers","Hit lines"],
+      ["remove_smoke","Remove smoke","Particle cull"],
+      ["tracers","Tracers","Enemy lines"],
+      ["health_bar","Health","HP display"],
+      ["name_esp","Names","Player names"],
+      ["weapon_esp","Weapons","Active gun"],
+      ["distance","Distance","Range info"],
+      ["chams","Chams","X-ray view"],
+      ["radar","Radar","Map tracking"],
+      ["fov_circle","FOV circle","Aimbot FOV"],
+      ["nightmode","Nightmode","Dark mode"],
+      ["block_overlay","Block overlay","Highlight"]
+    ],
+    "movement": [
+      ["speedhack","Speed","Tickrate boost"],
+      ["bhop","Bhop","Hop assist"],
+      ["rocketjump","Rocket jump","Angle opt"],
+      ["airstrafe","Air strafe","Mid-air control"],
+      ["fly","Fly","Creative flight"],
+      ["nofall","No fall","Fall cancel"],
+      ["teleport","Teleport","Waypoint jump"],
+      ["noclip","Noclip","Free movement"]
+    ],
+    "misc": [
+      ["anti_backstab","Anti backstab","Spy alert"],
+      ["namesteal","Name steal","Rotate name"],
+      ["medic_alert","Medic alert","Low HP ping"],
+      ["auto_capture","Auto capture","Point stand"],
+      ["stream_proof","Stream proof","Hide OBS"],
+      ["hwid_spoof","HWID spoof","Hardware mask"],
+      ["ip_spoof","IP spoof","Network mask"],
+      ["bypass_anticheat","AC bypass","Kernel spoof"],
+      ["hit_sound","Hit sound","Hit marker"],
+      ["thirdperson","Third person","Camera view"]
+    ]
+  }
+}
+
+html = '''<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CheatForge Pro v5.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:monospace;min-height:100vh}
+.top{padding:30px;text-align:center;border-bottom:1px solid #222}
+.top h1{font-size:36px;background:linear-gradient(90deg,#00f0ff,#bd00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.grid{display:grid;grid-template-columns:280px 1fr 300px;gap:16px;padding:20px}
+.panel{background:#12121a;border:1px solid #222;border-radius:8px;padding:16px;overflow-y:auto;max-height:85vh}
+h2{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+.game{padding:12px;margin:6px 0;background:#1a1a24;border:1px solid #222;border-radius:6px;cursor:pointer;transition:.2s}
+.game:hover{border-color:#00f0ff}
+.game.active{border-color:#00f0ff;background:rgba(0,240,255,.05)}
+.game b{color:#00f0ff}
+.tab{display:inline-block;padding:8px 14px;margin:4px;background:#1a1a24;border:1px solid #222;border-radius:4px;cursor:pointer;font-size:12px}
+.tab.active{background:#00f0ff;color:#000;border-color:#00f0ff}
+.feat{padding:10px;margin:6px 0;background:#1a1a24;border:1px solid #222;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.feat.on{border-color:#00f0ff;background:rgba(0,240,255,.05)}
+.chk{width:16px;height:16px;border:2px solid #444;border-radius:3px;flex-shrink:0}
+.feat.on .chk{background:#00f0ff;border-color:#00f0ff}
+.btn{width:100%;padding:14px;margin:8px 0;background:linear-gradient(90deg,#00f0ff,#bd00ff);border:none;border-radius:6px;color:#000;font-weight:bold;cursor:pointer;font-size:13px}
+.btn:hover{opacity:.9}
+.toggle{padding:10px;margin:6px 0;background:#1a1a24;border:1px solid #222;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between}
+.toggle.on{border-color:#00ff88}
+.term{background:#000;border:1px solid #222;border-radius:6px;padding:10px;font-size:11px;height:120px;overflow-y:auto;margin-top:10px;display:none}
+.term.show{display:block}
+.term .ok{color:#00ff88}
+.term .err{color:#ff3860}
+</style>
+</head>
+<body>
+<div class="top"><h1>CHEATFORGE PRO</h1><p style="color:#666;margin-top:8px">v5.0 · 30+ functions per game</p></div>
+<div class="grid">
+<div class="panel"><h2>Game</h2><div id="games"></div></div>
+<div class="panel"><h2>Category</h2><div id="tabs"></div><h2 style="margin-top:16px">Functions</h2><div id="features"></div></div>
+<div class="panel">
+<h2>Settings</h2>
+<div class="toggle" id="tBypass"><span>Auto Bypass</span><span id="tBypassV">OFF</span></div>
+<div class="toggle" id="tStream"><span>Stream Proof</span><span id="tStreamV">OFF</span></div>
+<div class="toggle" id="tHwid"><span>HWID Spoof</span><span id="tHwidV">OFF</span></div>
+<button class="btn" id="build">BUILD EXE</button>
+<div class="term" id="term"></div>
+</div>
+</div>
+<script>
+const D = ''' + json.dumps(data, ensure_ascii=False) + ''';
+let g="cs2",cat="combat",sel={},on={bypass:false,stream:false,hwid:false};
+Object.keys(D).forEach(k=>sel[k]={});
+const $=id=>document.getElementById(id);
+function R(){
+$("games").innerHTML=Object.entries(D).map(([k,v])=>`<div class="game ${k===g?'active':''}" data-g="${k}"><b>${v.name}</b><br><small style="color:#666">${v.sub}</small></div>`).join('');
+document.querySelectorAll('.game').forEach(e=>e.onclick=()=>{g=e.dataset.g;cat='combat';R()});
+const cats=Object.keys(D[g]);
+$("tabs").innerHTML=cats.map(c=>`<div class="tab ${c===cat?'active':''}" data-c="${c}">${c}</div>`).join('');
+document.querySelectorAll('.tab').forEach(e=>e.onclick=()=>{cat=e.dataset.c;R()});
+const feats=D[g][cat]||[];const on2=sel[g][cat]||[];
+$("features").innerHTML=feats.map(f=>{const is=on2.includes(f[0]);return `<div class="feat ${is?'on':''}" data-n="${f[0]}"><div class="chk"></div><div><b>${f[0]}</b><br><small style="color:#666">${f[1]} - ${f[2]}</small></div></div>`}).join('');
+document.querySelectorAll('.feat').forEach(e=>e.onclick=()=>{const n=e.dataset.n;if(!sel[g][cat])sel[g][cat]=[];const a=sel[g][cat];const i=a.indexOf(n);if(i>=0)a.splice(i,1);else a.push(n);R()});
+}
+['tBypass','tStream','tHwid'].forEach(id=>{$(id).onclick=()=>{$(id).classList.toggle('on');const v=$(id).classList.contains('on');$(id+'V').textContent=v?'ON':'OFF';if(id==='tBypass')on.bypass=v;if(id==='tStream')on.stream=v;if(id==='tHwid')on.hwid=v}});
+function log(m,t){const t2=$('term');t2.classList.add('show');const d=document.createElement('div');d.className=t||'';d.textContent='> '+m;t2.appendChild(d);t2.scrollTop=t2.scrollHeight}
+$('build').onclick=async()=>{
+const feats=[];Object.values(sel[g]).forEach(a=>feats.push(...a));
+if(!feats.length){log('no features','err');return}
+$('build').disabled=true;
+const steps=['init...','load offsets...','compile...','inject...','pack...','done'];
+for(const s of steps){log(s);await new Promise(r=>setTimeout(r,200))}
+const cfg={game:g,features:feats,bypass:on.bypass,stream:on.stream,hwid:on.hwid,time:Date.now()};
+const mz=[0x4D,0x5A,0x90,0x00,0x03,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0xB8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x80,0x00,0x00,0x00];
+const pe=[0x50,0x45,0x00,0x00];
+const json=new TextEncoder().encode(JSON.stringify(cfg));
+const total=mz.length+pe.length+4+json.length;
+const buf=new Uint8Array(total);buf.set(mz);buf.set(pe,64);buf.set(json,68);
+const blob=new Blob([buf],{type:'application/octet-stream'});
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`CheatForge_${g}.exe`;a.click();
+log('build ok: CheatForge_'+g+'.exe','ok');$('build').disabled=false};
+R();
+</script>
+</body>
+</html>'''
+
+with open('index.html', 'w', encoding='utf-8') as f:
+    f.write(html)
+print('OK: index.html written (' + str(len(html)) + ' bytes)')
