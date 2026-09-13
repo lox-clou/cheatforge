@@ -6,7 +6,6 @@
 #define OFF_HP      0
 #define OFF_TEAM    0
 #define OFF_ORIGIN  0
-#define OFF_DORMANT 0
 #define OFF_FLAGS   0
 #define OFF_PUNCH   0
 #define OFF_SHOTS   0

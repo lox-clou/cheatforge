@@ -1,5 +1,4 @@
-// CheatForge external framework — multi-game, GDI overlay, input-level aim
-// usage: CheatForge_<game>.exe [-ghost] [-etw] | config.json next to exe selects features
+// CheatForge per-game external — features compiled per binary via -DFEAT_*
 #include <windows.h>
 #include <tlhelp32.h>
 #include <cstdint>
@@ -8,24 +7,52 @@
 #include <vector>
 #include <string>
 #include <random>
+#ifdef GAME_CS2
 #include "offsets_gen.h"
-
-// xor-строки: в бинарнике нет plaintext имён процессов/модулей
-template<size_t N> struct XStr { char d[N]; constexpr XStr(const char(&s)[N]) { for (size_t i = 0; i < N; i++) d[i] = s[i] ^ 0x5A; } std::string get() const { std::string r; for (size_t i = 0; i < N - 1; i++) r += char(d[i] ^ 0x5A); return r; } };
-#define XS(s) XStr<sizeof(s)>(s).get()
+#endif
 
 static std::mt19937 rng(std::random_device{}());
 static int jit(int a, int b) { return a + (int)(rng() % (uint32_t)(b - a + 1)); }
 
-struct Mem { // external: только RPM из долгоживущего read-хендла
+// ---------- game config (selected at compile time) ----------
+struct GCfg { const char* key; DWORD col; int tol; const short* recoil; int recoilN; };
+#ifdef GAME_CS2
+static const GCfg G = { "cs2", 0, 0, 0, 0 };
+#elif defined(GAME_VALORANT)
+static const short RC[] = { 0,-3, 0,-4, 1,-4, 0,-5, -1,-4, 0,-4, 1,-3, 0,-3 };
+static const GCfg G = { "valorant", RGB(255,60,60), 70, RC, 8 };
+#elif defined(GAME_RUST)
+static const short RC[] = { 0,-4, 1,-4, 0,-5, -1,-4, 0,-4, 1,-3, 0,-4, 0,-3 };
+static const GCfg G = { "rust", 0, 0, RC, 8 };
+#elif defined(GAME_APEX)
+static const GCfg G = { "apex", RGB(255,70,70), 75, 0, 0 };
+#elif defined(GAME_PUBG)
+static const short RC[] = { 0,-3, 0,-4, 1,-3, 0,-4, 0,-3, -1,-3, 0,-3, 0,-2 };
+static const GCfg G = { "pubg", RGB(255,80,80), 70, RC, 8 };
+#elif defined(GAME_FORTNITE)
+static const short RC[] = { 0,-2, 1,-2, 0,-3, -1,-2, 0,-2, 1,-2, 0,-2, 0,-1 };
+static const GCfg G = { "fortnite", 0, 0, RC, 8 };
+#elif defined(GAME_GTA5)
+static const short RC[] = { 0,-2, 1,-1, 0,-2, -1,-1, 0,-2, 1,-1, 0,-1, 0,-1 };
+static const GCfg G = { "gta5", 0, 0, RC, 8 };
+#elif defined(GAME_MINECRAFT)
+static const GCfg G = { "minecraft", RGB(255,255,255), 45, 0, 0 };
+#elif defined(GAME_TF2)
+static const GCfg G = { "tf2", RGB(190,60,50), 60, 0, 0 };
+#else
+static const GCfg G = { "none", 0, 0, 0, 0 };
+#endif
+
+// ---------- memory (CS2 tier) ----------
+#ifdef GAME_CS2
+struct Mem {
     HANDLE hr = 0; DWORD pid = 0;
     bool attach(const char* proc) {
         HANDLE sn = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         PROCESSENTRY32 pe; pe.dwSize = sizeof(pe);
         if (Process32First(sn, &pe)) do { if (!_stricmp(pe.szExeFile, proc)) { pid = pe.th32ProcessID; break; } } while (Process32Next(sn, &pe));
-        CloseHandle(sn);
-        if (!pid) return false;
-        hr = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, pid); // минимальные права чтения
+        CloseHandle(sn); if (!pid) return false;
+        hr = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, pid);
         return hr != 0;
     }
     uintptr_t modBase(const char* mod) {
@@ -36,41 +63,22 @@ struct Mem { // external: только RPM из долгоживущего read-
         CloseHandle(sn); return b;
     }
     template<class T> T rd(uintptr_t a) { T v = {}; ReadProcessMemory(hr, (LPCVOID)a, &v, sizeof(T), 0); return v; }
-    template<class T> bool wr(uintptr_t a, T v) { // write-хендл живёт только на время записи
-        HANDLE hw = OpenProcess(PROCESS_VM_WRITE | PROCESS_VM_OPERATION, FALSE, pid);
-        if (!hw) return false;
-        bool ok = WriteProcessMemory(hw, (LPVOID)a, &v, sizeof(T), 0) != 0;
-        CloseHandle(hw); return ok;
-    }
+    template<class T> bool wr(uintptr_t a, T v) { HANDLE hw = OpenProcess(PROCESS_VM_WRITE | PROCESS_VM_OPERATION, FALSE, pid); if (!hw) return false; bool ok = WriteProcessMemory(hw, (LPVOID)a, &v, sizeof(T), 0) != 0; CloseHandle(hw); return ok; }
 };
+#endif
 
-struct Prof { const char* key, * proc, * mod; uintptr_t entList, pawn, viewMat, forceJump; int hp, team, origin, dormant, flags, punch, shots, cross, flash, ang; };
-static Prof P0(const char* k, const char* p, const char* m) { Prof r = {}; r.key = k; r.proc = p; r.mod = m; return r; }
-static Prof PROFS[] = {
-    { "cs2", "cs2.exe", "client.dll", OFF_ENTLIST, OFF_PAWN, OFF_VIEWMAT, OFF_FORCEJUMP, OFF_HP, OFF_TEAM, OFF_ORIGIN, OFF_DORMANT, OFF_FLAGS, OFF_PUNCH, OFF_SHOTS, OFF_CROSS, OFF_FLASH, OFF_ANG },
-    P0("tf2", "hl2.exe", "client.dll"),
-    P0("valorant", "VALORANT-Win64-Shipping.exe", "VALORANT-Win64-Shipping.exe"),
-    P0("rust", "RustClient.exe", "GameAssembly.dll"),
-    P0("apex", "r5apex.exe", "r5apex.exe"),
-    P0("pubg", "TslGame.exe", "TslGame.exe"),
-    P0("fortnite", "FortniteClient-Win64-Shipping.exe", "FortniteClient-Win64-Shipping.exe"),
-    P0("gta5", "GTA5.exe", "GTA5.exe"),
-    P0("minecraft", "javaw.exe", "javaw.exe"),
-};
-
-// ---- оверлей: GDI + colorkey, класс окна с бытовым именем ----
+// ---------- overlay ----------
 struct DI { int t; int x, y, w, h; DWORD col; char txt[24]; };
 static std::vector<DI> g_items; static CRITICAL_SECTION g_cs; static HWND g_ov = 0; static int g_sw, g_sh;
 static LRESULT CALLBACK OvProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     if (m == WM_PAINT) {
         PAINTSTRUCT ps; HDC dc = BeginPaint(h, &ps);
         RECT r; GetClientRect(h, &r);
-        HBRUSH bg = CreateSolidBrush(RGB(255, 0,255)); FillRect(dc, &r, bg); DeleteObject(bg);
+        HBRUSH bg = CreateSolidBrush(RGB(255, 0, 255)); FillRect(dc, &r, bg); DeleteObject(bg);
         SetBkMode(dc, TRANSPARENT);
         EnterCriticalSection(&g_cs);
         for (auto& it : g_items) {
             if (it.t == 0) { HPEN p = CreatePen(PS_SOLID, 1, it.col); HGDIOBJ op = SelectObject(dc, p); HGDIOBJ ob = SelectObject(dc, GetStockObject(NULL_BRUSH)); Rectangle(dc, it.x, it.y, it.x + it.w, it.y + it.h); SelectObject(dc, op); SelectObject(dc, ob); DeleteObject(p); }
-            else if (it.t == 1) { HPEN p = CreatePen(PS_SOLID, 1, it.col); HGDIOBJ op = SelectObject(dc, p); MoveToEx(dc, it.x, it.y, 0); LineTo(dc, it.w, it.h); SelectObject(dc, op); DeleteObject(p); }
             else if (it.t == 2) { SetTextColor(dc, it.col); TextOutA(dc, it.x, it.y, it.txt, (int)strlen(it.txt)); }
             else { HBRUSH b = CreateSolidBrush(it.col); RECT rr = { it.x - 2, it.y - 2, it.x + 2, it.y + 2 }; FillRect(dc, &rr, b); DeleteObject(b); }
         }
@@ -80,22 +88,14 @@ static LRESULT CALLBACK OvProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     return DefWindowProcA(h, m, w, l);
 }
 static DWORD WINAPI OvThread(LPVOID) {
-    static std::string cls = XS("EdgeUiWindow");
-    WNDCLASSA wc = {}; wc.lpfnWndProc = OvProc; wc.hInstance = GetModuleHandleA(0); wc.lpszClassName = cls.c_str();
+    WNDCLASSA wc = {}; wc.lpfnWndProc = OvProc; wc.hInstance = GetModuleHandleA(0); wc.lpszClassName = "EdgeUiWindow";
     RegisterClassA(&wc);
-    g_ov = CreateWindowExA(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW, cls.c_str(), "", WS_POPUP | WS_VISIBLE, 0, 0, g_sw, g_sh, 0, 0, wc.hInstance, 0);
+    g_ov = CreateWindowExA(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW, "EdgeUiWindow", "", WS_POPUP | WS_VISIBLE, 0, 0, g_sw, g_sh, 0, 0, wc.hInstance, 0);
     SetLayeredWindowAttributes(g_ov, RGB(255, 0, 255), 0, LWA_COLORKEY);
     MSG msg; while (GetMessageA(&msg, 0, 0, 0)) { TranslateMessage(&msg); DispatchMessageA(&msg); }
     return 0;
 }
-static bool w2s(const float* vm, float x, float y, float z, float& ox, float& oy) {
-    float w = vm[12] * x + vm[13] * y + vm[14] * z + vm[15];
-    if (w < 0.01f) return false;
-    float sx = vm[0] * x + vm[1] * y + vm[2] * z + vm[3];
-    float sy = vm[4] * x + vm[5] * y + vm[6] * z + vm[7];
-    ox = (g_sw / 2) * (1 + sx / w); oy = (g_sh / 2) * (1 - sy / w); return true;
-}
-static void moveMouse(float tx, float ty, float smooth) { // input-level аим: память углов не трогаем
+static void moveMouse(float tx, float ty, float smooth) {
     POINT c; GetCursorPos(&c);
     float nx = c.x + (tx - c.x) / smooth, ny = c.y + (ty - c.y) / smooth;
     INPUT in = {}; in.type = INPUT_MOUSE; in.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
@@ -103,114 +103,199 @@ static void moveMouse(float tx, float ty, float smooth) { // input-level аим:
     in.mi.dy = (LONG)((ny / GetSystemMetrics(SM_CYVIRTUALSCREEN)) * 65535);
     SendInput(1, &in, sizeof(in));
 }
-static void patchETW() { // глушит usermode ETW-телеметрию
-    HMODULE n = GetModuleHandleA("ntdll.dll"); if (!n) return;
-    BYTE* p = (BYTE*)GetProcAddress(n, "EtwEventWrite"); if (!p) return;
-    DWORD old; VirtualProtect(p, 4, PAGE_EXECUTE_READWRITE, &old);
-    p[0] = 0xC3;
-    VirtualProtect(p, 4, old, &old);
+
+// ---------- screen capture + color clusters (no memory access at all) ----------
+#if defined(FEAT_COLESP) || defined(FEAT_TRIGCOL) || defined(FEAT_AIMCOL)
+static std::vector<uint32_t> g_cap; static int g_cw = 0, g_ch = 0;
+static void capture() {
+    HDC s = GetDC(0);
+    g_cw = g_sw / 4; g_ch = g_sh / 4;
+    std::vector<uint32_t> full((size_t)g_sw * g_sh);
+    BITMAPINFO bi = {}; bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); bi.bmiHeader.biWidth = g_sw; bi.bmiHeader.biHeight = -g_sh; bi.bmiHeader.biPlanes = 1; bi.bmiHeader.biBitCount = 32;
+    HDC m = CreateCompatibleDC(s); HBITMAP hb = CreateCompatibleBitmap(s, g_sw, g_sh);
+    HGDIOBJ ob = SelectObject(m, hb); BitBlt(m, 0, 0, g_sw, g_sh, s, 0, 0, SRCCOPY);
+    GetDIBits(m, hb, 0, g_sh, full.data(), &bi, DIB_RGB_COLORS);
+    SelectObject(m, ob); DeleteObject(hb); DeleteDC(m); ReleaseDC(0, s);
+    g_cap.assign((size_t)g_cw * g_ch, 0);
+    for (int y = 0; y < g_ch; y++) for (int x = 0; x < g_cw; x++) g_cap[(size_t)y * g_cw + x] = full[(size_t)(y * 4) * g_sw + x * 4];
 }
-static void ghost(const char* game) { // маскарад: копия под бытовым именем в %TEMP%
-    char self[MAX_PATH]; GetModuleFileNameA(0, self, MAX_PATH);
-    std::string dst = std::string(getenv("TEMP")) + "\\OneDriveSync.exe";
-    CopyFileA(self, dst.c_str(), FALSE);
-    ShellExecuteA(0, "open", dst.c_str(), game, "", SW_SHOW);
-    MoveFileExA(self, 0, MOVEFILE_DELAY_UNTIL_REBOOT);
-    ExitProcess(0);
+struct Cl { int x, y, n; };
+static bool near_col(uint32_t c) {
+    int r = c & 255, g = (c >> 8) & 255, b = (c >> 16) & 255;
+    int tr = G.col & 255, tg = (G.col >> 8) & 255, tb = (G.col >> 16) & 255;
+    return abs(r - tr) < G.tol && abs(g - tg) < G.tol && abs(b - tb) < G.tol;
 }
+static std::vector<Cl> clusters() {
+    std::vector<Cl> out;
+    for (int y = 0; y < g_ch; y++) for (int x = 0; x < g_cw; x++) {
+        if (!near_col(g_cap[(size_t)y * g_cw + x])) continue;
+        bool placed = false;
+        for (auto& c : out) if (abs(c.x / c.n - x) < 8 && abs(c.y / c.n - y) < 10) { c.x += x; c.y += y; c.n++; placed = true; break; }
+        if (!placed && out.size() < 12) out.push_back({ x, y, 1 });
+    }
+    return out;
+}
+#endif
+
 static std::string readAll(const char* p) { FILE* f = fopen(p, "rb"); if (!f) return ""; fseek(f, 0, SEEK_END); long n = ftell(f); fseek(f, 0, SEEK_SET); std::string s(n, 0); if (n) fread(&s[0], 1, n, f); fclose(f); return s; }
 static bool cfgHas(const std::string& s, const char* f) { std::string a = ":"; a += f; a += "\""; std::string b = "\""; b += f; b += "\""; return s.find(a) != std::string::npos || s.find(b) != std::string::npos; }
+static bool gate(const std::string& cfg, const char* a, const char* b = 0) { if (cfg.empty()) return true; return cfgHas(cfg, a) || (b && cfgHas(cfg, b)); }
 
-int main(int argc, char** argv) {
+int main() {
     std::string cfg = readAll("config.json");
-    std::string key = "cs2";
-    { char self[MAX_PATH]; GetModuleFileNameA(0, self, MAX_PATH); std::string n = strrchr(self, '\\') ? strrchr(self, '\\') + 1 : self;
-      for (auto& pr : PROFS) { std::string tk = std::string("CheatForge_") + pr.key; if (n.find(tk) == 0 || n.find(pr.key) != std::string::npos) key = pr.key; } }
-    for (int i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "-etw")) patchETW();
-        else if (!strcmp(argv[i], "-ghost")) ghost(key.c_str());
-        else key = argv[i];
-    }
-    Prof* pr = 0; for (auto& p : PROFS) if (key == p.key) pr = &p;
-    if (!pr) { printf("[cf] unknown game %s\n", key.c_str()); return 1; }
-    if (!pr->entList) { printf("[cf] profile '%s': offsets not filled. put them into PROFS[] from a dumper/reclass for that game, rebuild, features light up automatically.\n", pr->key); return 1; }
-    bool fEsp = cfg.empty() ? true : cfgHas(cfg, "esp") || cfgHas(cfg, "playeresp");
-    bool fAim = cfgHas(cfg, "aimbot") || cfgHas(cfg, "aim_assist");
-    bool fTrig = cfgHas(cfg, "triggerbot");
-    bool fBhop = cfgHas(cfg, "bhop");
-    bool fRcs = cfgHas(cfg, "rcs") || cfgHas(cfg, "norecoil");
-    bool fRadar = cfgHas(cfg, "radar");
-    bool fFlash = cfgHas(cfg, "remove_flash");
-    printf("[cf] game=%s esp=%d aim=%d trig=%d bhop=%d rcs=%d radar=%d noflash=%d\n", pr->key, fEsp, fAim, fTrig, fBhop, fRcs, fRadar, fFlash);
-    printf("[cf] waiting for %s ...\n", pr->proc);
-    Mem mem; while (!mem.attach(pr->proc)) Sleep(1000);
-    uintptr_t base = mem.modBase(pr->mod);
-    printf("[cf] pid=%lu base=0x%llx\n", (unsigned long)mem.pid, (unsigned long long)base);
+    printf("[cf] game=%s | compiled features:", G.key);
+#ifdef FEAT_MEMESP
+    printf(" memESP");
+#endif
+#ifdef FEAT_COLESP
+    printf(" colorESP");
+#endif
+#ifdef FEAT_MEMAIM
+    printf(" memAim");
+#endif
+#ifdef FEAT_AIMCOL
+    printf(" colorAim");
+#endif
+#ifdef FEAT_TRIGMEM
+    printf(" memTrig");
+#endif
+#ifdef FEAT_TRIGCOL
+    printf(" colorTrig");
+#endif
+#ifdef FEAT_BHOPMEM
+    printf(" memBhop");
+#endif
+#ifdef FEAT_BHOPIN
+    printf(" inputBhop");
+#endif
+#ifdef FEAT_RCSMEM
+    printf(" memRCS");
+#endif
+#ifdef FEAT_RECOIL
+    printf(" recoilMacro");
+#endif
+#ifdef FEAT_RAPID
+    printf(" rapidFire");
+#endif
+#ifdef FEAT_RADARMEM
+    printf(" radar");
+#endif
+    printf("\n[cf] END = exit\n");
     g_sw = GetSystemMetrics(SM_CXSCREEN); g_sh = GetSystemMetrics(SM_CYSCREEN);
     InitializeCriticalSection(&g_cs);
     CreateThread(0, 0, OvThread, 0, 0, 0);
-    printf("[cf] overlay up | END = exit\n");
-    float prevPunchX = 0, prevPunchY = 0; int prevShots = 0; bool lastJump = false;
+#ifdef GAME_CS2
+    Mem mem; printf("[cf] waiting for cs2.exe ...\n");
+    while (!mem.attach("cs2.exe")) Sleep(1000);
+    uintptr_t base = mem.modBase("client.dll");
+    printf("[cf] pid=%lu base=0x%llx\n", (unsigned long)mem.pid, (unsigned long long)base);
+#endif
+    float ppx = 0, ppy = 0; int pshots = 0, ridx = 0; bool lj = false; DWORD lastClick = 0;
     while (!(GetAsyncKeyState(VK_END) & 0x8000)) {
         std::vector<DI> items;
+        bool lmb = GetAsyncKeyState(VK_LBUTTON) & 0x8000;
+        bool space = GetAsyncKeyState(VK_SPACE) & 0x8000;
+#if defined(FEAT_COLESP) || defined(FEAT_TRIGCOL) || defined(FEAT_AIMCOL)
+        capture();
+        auto cls = clusters();
+#ifdef FEAT_COLESP
+        if (gate(cfg, "esp", "playeresp")) for (auto& c : cls) {
+            if (c.n < 4) continue;
+            DI b = {}; b.t = 0; b.x = c.x / c.n * 4 - 24; b.y = c.y / c.n * 4 - 40; b.w = 48; b.h = 80; b.col = RGB(255, 60, 90); items.push_back(b);
+        }
+#endif
+#ifdef FEAT_TRIGCOL
+        if (gate(cfg, "triggerbot") && !cls.empty()) {
+            uint32_t center = g_cap[(size_t)(g_ch / 2) * g_cw + g_cw / 2];
+            if (near_col(center) && GetTickCount() - lastClick > 120) { mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); Sleep(18); mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); lastClick = GetTickCount(); }
+        }
+#endif
+#ifdef FEAT_AIMCOL
+        if (gate(cfg, "aimbot", "aim_assist") && !cls.empty()) {
+            int bi = 0; float bd = 1e9f;
+            for (size_t i = 0; i < cls.size(); i++) { float dx = cls[i].x / cls[i].n * 4 - g_sw / 2, dy = cls[i].y / cls[i].n * 4 - g_sh / 2, d = sqrtf(dx * dx + dy * dy); if (d < bd) { bd = d; bi = (int)i; } }
+            if (bd < 300) moveMouse(cls[bi].x / cls[bi].n * 4, cls[bi].y / cls[bi].n * 4, 6.0f);
+        }
+#endif
+#endif
+#ifdef FEAT_RECOIL
+        if (gate(cfg, "rcs", "norecoil") && G.recoil && lmb) {
+            INPUT in = {}; in.type = INPUT_MOUSE; in.mi.dwFlags = MOUSEEVENTF_MOVE;
+            in.mi.dx = G.recoil[(ridx % G.recoilN) * 2]; in.mi.dy = G.recoil[(ridx % G.recoilN) * 2 + 1];
+            SendInput(1, &in, sizeof(in)); ridx++;
+        } else if (!lmb) ridx = 0;
+#endif
+#ifdef FEAT_RAPID
+        if (gate(cfg, "rapid_fire") && lmb && GetTickCount() - lastClick > 60) { mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); lastClick = GetTickCount(); }
+#endif
+#ifdef FEAT_BHOPIN
+        if (gate(cfg, "bhop") && space) { keybd_event(VK_SPACE, 0, KEYEVENTF_KEYUP, 0); Sleep(jit(4, 9)); keybd_event(VK_SPACE, 0, 0, 0); }
+#endif
+#ifdef GAME_CS2
         float vm[16] = { 0 };
-        for (int i = 0; i < 16; i++) vm[i] = mem.rd<float>(base + pr->viewMat + i * 4);
-        uintptr_t local = mem.rd<uintptr_t>(base + pr->pawn);
-        int myTeam = local ? mem.rd<int>(local + pr->team) : 0;
-        float myAng = local && pr->ang ? mem.rd<float>(local + pr->ang + 4) : 0.f;
-        if (fRcs && local && pr->punch) { // компенсация отдачи мышью, не памятью
-            int shots = pr->shots ? mem.rd<int>(local + pr->shots) : 0;
-            float px = mem.rd<float>(local + pr->punch), py = mem.rd<float>(local + pr->punch + 4);
-            if (shots > prevShots) {
-                INPUT in = {}; in.type = INPUT_MOUSE; in.mi.dwFlags = MOUSEEVENTF_MOVE;
-                in.mi.dx = (LONG)-((px - prevPunchX) * 2.0f); in.mi.dy = (LONG)-((py - prevPunchY) * 2.0f);
-                SendInput(1, &in, sizeof(in));
-            }
-            prevShots = shots; prevPunchX = px; prevPunchY = py;
+        for (int i = 0; i < 16; i++) vm[i] = mem.rd<float>(base + OFF_VIEWMAT + i * 4);
+        uintptr_t local = mem.rd<uintptr_t>(base + OFF_PAWN);
+        int myTeam = local ? mem.rd<int>(local + OFF_TEAM) : 0;
+#ifdef FEAT_RCSMEM
+        if (gate(cfg, "rcs", "norecoil") && local) {
+            int sh = mem.rd<int>(local + OFF_SHOTS);
+            float px = mem.rd<float>(local + OFF_PUNCH), py = mem.rd<float>(local + OFF_PUNCH + 4);
+            if (sh > pshots) { INPUT in = {}; in.type = INPUT_MOUSE; in.mi.dwFlags = MOUSEEVENTF_MOVE; in.mi.dx = (LONG)-((px - ppx) * 2.f); in.mi.dy = (LONG)-((py - ppy) * 2.f); SendInput(1, &in, sizeof(in)); }
+            pshots = sh; ppx = px; ppy = py;
         }
-        if (fBhop && local && pr->flags && pr->forceJump) {
-            int fl = mem.rd<int>(local + pr->flags);
-            bool want = (GetAsyncKeyState(VK_SPACE) & 0x8000) && (fl & 1);
-            if (want != lastJump) { mem.wr<int>(base + pr->forceJump, want ? 6 : 0); lastJump = want; }
+#endif
+#ifdef FEAT_BHOPMEM
+        if (gate(cfg, "bhop") && local) {
+            int fl = mem.rd<int>(local + OFF_FLAGS);
+            bool want = space && (fl & 1);
+            if (want != lj) { mem.wr<int>(base + OFF_FORCEJUMP, want ? 6 : 0); lj = want; }
         }
-        if (fFlash && local && pr->flash) mem.wr<float>(local + pr->flash, 0.f);
-        float bestD = 1e9f, bestX = 0, bestY = 0; bool have = false;
+#endif
+#ifdef FEAT_NOFLASH
+        if (gate(cfg, "remove_flash") && local) mem.wr<float>(local + OFF_FLASH, 0.f);
+#endif
+        float bd = 1e9f, bx = 0, by = 0; bool have = false;
         for (int i = 0; i < 64; i++) {
-            uintptr_t le = mem.rd<uintptr_t>(base + pr->entList + 0x8 * (i >> 9) + 0x10);
+            uintptr_t le = mem.rd<uintptr_t>(base + OFF_ENTLIST + 0x8 * (i >> 9) + 0x10);
             if (!le) continue;
             uintptr_t ent = mem.rd<uintptr_t>(le + 0x78 * (i & 0x1FF));
             if (!ent || ent == local) continue;
-            int hp = mem.rd<int>(ent + pr->hp);
-            int tm = mem.rd<int>(ent + pr->team);
+            int hp = mem.rd<int>(ent + OFF_HP); int tm = mem.rd<int>(ent + OFF_TEAM);
             if (hp <= 0 || hp > 100 || tm == myTeam) continue;
-            if (pr->dormant && mem.rd<uint8_t>(ent + pr->dormant)) continue;
-            float x = mem.rd<float>(ent + pr->origin), y = mem.rd<float>(ent + pr->origin + 4), z = mem.rd<float>(ent + pr->origin + 8);
-            if (i % 8 == 0) Sleep(jit(2, 5)); // джиттер чтений: ломает фикс-интервальную эвристику RPM
-            float hx, hy, fx, fy;
-            if (!w2s(vm, x, y, z + 64, hx, hy)) continue;
-            w2s(vm, x, y, z, fx, fy);
+            float x = mem.rd<float>(ent + OFF_ORIGIN), y = mem.rd<float>(ent + OFF_ORIGIN + 4), z = mem.rd<float>(ent + OFF_ORIGIN + 8);
+            if (i % 8 == 0) Sleep(jit(2, 5));
+            float w = vm[12] * x + vm[13] * y + vm[14] * z + vm[15];
+            if (w < 0.01f) continue;
+            float sx = vm[0] * x + vm[1] * y + vm[2] * z + vm[3], sy = vm[4] * x + vm[5] * y + vm[6] * z + vm[7];
+            float hx = (g_sw / 2) * (1 + sx / w), hy = (g_sh / 2) * (1 - sy / w);
+            float fx = hx, fy = (g_sh / 2) * (1 - (vm[4] * x + vm[5] * y + vm[6] * z + vm[7] - 64 * vm[6]) / w);
             int bh = (int)(fy - hy), bw = bh / 2;
-            if (fEsp) {
+#ifdef FEAT_MEMESP
+            if (gate(cfg, "esp", "playeresp")) {
                 DI b = {}; b.t = 0; b.x = (int)hx - bw / 2; b.y = (int)hy; b.w = bw; b.h = bh; b.col = RGB(255, 60, 90); items.push_back(b);
-                DI hbar = {}; hbar.t = 1; hbar.x = b.x - 4; hbar.y = b.y + bh - (int)(bh * hp / 100.f); hbar.w = b.x - 4; hbar.h = b.y + bh; hbar.col = RGB(0, 255, 136); items.push_back(hbar);
                 DI t = {}; t.t = 2; t.x = b.x; t.y = b.y - 14; t.col = RGB(255, 255, 255); sprintf(t.txt, "%d hp", hp); items.push_back(t);
             }
-            if (fRadar && local) {
-                float dx = x - mem.rd<float>(local + pr->origin), dy = y - mem.rd<float>(local + pr->origin + 4);
+#endif
+#ifdef FEAT_RADARMEM
+            if (gate(cfg, "radar") && local) {
+                float myAng = mem.rd<float>(local + OFF_ANG + 4);
+                float dx = x - mem.rd<float>(local + OFF_ORIGIN), dy = y - mem.rd<float>(local + OFF_ORIGIN + 4);
                 float ca = cosf(myAng), sa = sinf(myAng);
-                float rx = dx * ca - dy * sa, ry = dx * sa + dy * ca;
-                DI d = {}; d.t = 3; d.x = g_sw - 110 + (int)(rx / 40); d.y = 110 - (int)(ry / 40); d.col = RGB(255, 60, 90); items.push_back(d);
+                DI d = {}; d.t = 3; d.x = g_sw - 110 + (int)((dx * ca - dy * sa) / 40); d.y = 110 - (int)((dx * sa + dy * ca) / 40); d.col = RGB(255, 60, 90); items.push_back(d);
             }
-            if (fAim || fTrig) {
-                float ddx = hx - g_sw / 2, ddy = hy - g_sh / 2, d = sqrtf(ddx * ddx + ddy * ddy);
-                if (d < bestD) { bestD = d; bestX = hx; bestY = hy; have = true; }
-            }
-            if (fTrig && pr->cross && local) {
-                int cid = mem.rd<int>(local + pr->cross);
-                if (cid == i + 1 && bestD < 40) { mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); Sleep(20); mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); }
-            }
+#endif
+#if defined(FEAT_MEMAIM) || defined(FEAT_TRIGMEM)
+            float ddx = hx - g_sw / 2, ddy = hy - g_sh / 2, d = sqrtf(ddx * ddx + ddy * ddy);
+            if (d < bd) { bd = d; bx = hx; by = hy; have = true; }
+#ifdef FEAT_TRIGMEM
+            if (gate(cfg, "triggerbot") && mem.rd<int>(local + OFF_CROSS) == i + 1 && d < 40 && GetTickCount() - lastClick > 120) { mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); Sleep(18); mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); lastClick = GetTickCount(); }
+#endif
+#endif
         }
-        if (have && fAim && bestD < 260) moveMouse(bestX, bestY, 5.0f);
+#ifdef FEAT_MEMAIM
+        if (gate(cfg, "aimbot") && have && bd < 260) moveMouse(bx, by, 5.0f);
+#endif
+#endif
         EnterCriticalSection(&g_cs); g_items.swap(items); LeaveCriticalSection(&g_cs);
         if (g_ov) InvalidateRect(g_ov, 0, FALSE);
         Sleep(jit(3, 6));
