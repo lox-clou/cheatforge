@@ -1,0 +1,51 @@
+# Скомпилированные бинарники
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+*.lib
+
+# Папки сборки
+build/
+dist/
+out/
+Release/
+Debug/
+x64/
+x86/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.sln.docstates
+*.vcxproj.user
+*.vcxproj.filters
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node.js
+node_modules/
+package-lock.json
+npm-debug.log
+
+# OS файлы
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# CheatForge конфиги
+*.cfg
+*.json
+!package.json
+
+# Временные файлы
+*.tmp
+*.temp
+*.log
