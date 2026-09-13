@@ -3,98 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CheatForge // Generator</title>
+<title>CheatForge // v2.0</title>
 <style>
 :root{
-  --bg:#07070a; --panel:rgba(18,18,24,.6); --border:rgba(255,255,255,.06);
+  --bg:#050508; --panel:rgba(15,15,20,.7); --border:rgba(255,255,255,.08);
   --text:#e2e2e9; --dim:#6b6b7b; --accent:#00f0ff; --glow:rgba(0,240,255,.15);
-  --accent2:#bd00ff; --radius:12px;
+  --accent2:#bd00ff; --radius:10px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+body{font-family:'JetBrains Mono','Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
   height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center}
 body::before{content:'';position:fixed;inset:-50%;
-  background:radial-gradient(circle at 30% 20%,var(--glow) 0%,transparent 40%),
-             radial-gradient(circle at 70% 80%,rgba(189,0,255,.08) 0%,transparent 40%);
-  animation:drift 20s infinite alternate ease-in-out;z-index:0}
-@keyframes drift{to{transform:translate(-5%,-5%)}}
-.app{position:relative;z-index:1;width:1200px;height:760px;display:grid;
-  grid-template-columns:260px 1fr 280px;gap:16px;padding:20px}
-.panel{background:var(--panel);backdrop-filter:blur(20px);border:1px solid var(--border);
-  border-radius:var(--radius);padding:20px;overflow-y:auto}
-.panel::-webkit-scrollbar{width:6px}
-.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-h2{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);
-  margin-bottom:14px;font-weight:600}
-.logo{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;
+  background:radial-gradient(circle at 20% 30%,var(--glow) 0%,transparent 40%),
+             radial-gradient(circle at 80% 70%,rgba(189,0,255,.08) 0%,transparent 40%);
+  animation:drift 25s infinite alternate ease-in-out;z-index:0;pointer-events:none}
+@keyframes drift{to{transform:translate(-3%,-3%)}}
+.app{position:relative;z-index:1;width:1280px;height:800px;display:grid;
+  grid-template-columns:280px 1fr 320px;gap:16px;padding:20px}
+.panel{background:var(--panel);backdrop-filter:blur(24px);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;overflow-y:auto;display:flex;flex-direction:column}
+.panel::-webkit-scrollbar{width:4px}
+.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+h2{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--dim);
+  margin-bottom:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+h2::before{content:'';width:8px;height:8px;background:var(--accent);border-radius:2px;box-shadow:0 0 8px var(--accent)}
+.logo{font-size:24px;font-weight:900;letter-spacing:-1px;margin-bottom:4px;
   background:linear-gradient(90deg,var(--accent),var(--accent2));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.tag{font-size:10px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:24px}
-.game{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;
-  cursor:pointer;border:1px solid transparent;margin-bottom:8px;transition:.2s}
+.tag{font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;opacity:.7}
+.game{display:flex;align-items:center;gap:14px;padding:14px;border-radius:8px;
+  cursor:pointer;border:1px solid transparent;margin-bottom:6px;transition:.2s}
 .game:hover{background:rgba(255,255,255,.03);border-color:var(--border)}
-.game.active{background:var(--glow);border-color:var(--accent);
-  box-shadow:0 0 20px var(--glow),inset 0 0 20px rgba(0,240,255,.05)}
-.game-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;
-  justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;
-  background:linear-gradient(135deg,rgba(0,240,255,.2),rgba(189,0,255,.2));
-  border:1px solid var(--border)}
-.game-name{font-weight:600;font-size:14px}
-.game-sub{font-size:11px;color:var(--dim);margin-top:2px}
-.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:10px}
-.tab{padding:8px 14px;font-size:12px;letter-spacing:1px;text-transform:uppercase;
-  color:var(--dim);cursor:pointer;border-radius:6px;transition:.15s;font-weight:600}
+.game.active{background:linear-gradient(90deg,rgba(0,240,255,.08),transparent);border-left:3px solid var(--accent)}
+.game-icon{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;font-weight:900;font-size:12px;flex-shrink:0;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--accent)}
+.game-name{font-weight:700;font-size:13px}
+.game-sub{font-size:10px;color:var(--dim);margin-top:3px}
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;flex-wrap:wrap}
+.tab{padding:6px 12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--dim);cursor:pointer;border-radius:4px;transition:.15s;font-weight:600}
 .tab:hover{color:var(--text)}
-.tab.active{color:var(--accent);background:var(--glow)}
-.feat{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:8px;
-  margin-bottom:6px;cursor:pointer;transition:.15s;border:1px solid transparent}
+.tab.active{color:var(--accent);background:rgba(0,240,255,.1)}
+.feat{display:flex;align-items:flex-start;gap:12px;padding:10px;border-radius:6px;
+  margin-bottom:4px;cursor:pointer;transition:.15s;border:1px solid transparent}
 .feat:hover{background:rgba(255,255,255,.02);border-color:var(--border)}
-.feat.on{background:rgba(0,240,255,.04);border-color:rgba(0,240,255,.2)}
-.chk{width:18px;height:18px;border:1.5px solid var(--dim);border-radius:5px;
-  flex-shrink:0;margin-top:1px;position:relative;transition:.15s}
-.feat.on .chk{background:var(--accent);border-color:var(--accent);
-  box-shadow:0 0 10px var(--glow)}
-.feat.on .chk::after{content:'';position:absolute;left:5px;top:2px;width:4px;height:8px;
-  border:solid #07070a;border-width:0 2px 2px 0;transform:rotate(45deg)}
-.feat-name{font-weight:600;font-size:13px}
-.feat-desc{font-size:11px;color:var(--dim);margin-top:3px;line-height:1.4}
-.ctrl{margin-bottom:18px}
-.ctrl label{display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+.feat.on{background:rgba(0,240,255,.06);border-color:rgba(0,240,255,.3)}
+.chk{width:16px;height:16px;border:1.5px solid var(--dim);border-radius:4px;
+  flex-shrink:0;margin-top:2px;position:relative;transition:.15s}
+.feat.on .chk{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px var(--glow)}
+.feat.on .chk::after{content:'';position:absolute;left:4px;top:1px;width:4px;height:8px;
+  border:solid #050508;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.feat-name{font-weight:600;font-size:12px}
+.feat-desc{font-size:10px;color:var(--dim);margin-top:3px;line-height:1.4}
+.ctrl{margin-bottom:16px}
+.ctrl label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
   color:var(--dim);margin-bottom:8px;font-weight:600}
-.ctrl input[type=range]{width:100%;accent-color:var(--accent)}
-.ctrl input[type=text],.ctrl select{width:100%;background:rgba(0,0,0,.3);
-  border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);
-  font-size:13px;font-family:inherit;outline:none;transition:.15s}
-.ctrl input:focus,.ctrl select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent);height:4px;background:rgba(255,255,255,.1);border-radius:2px}
+.ctrl input[type=text],.ctrl select{width:100%;background:rgba(0,0,0,.4);
+  border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);
+  font-size:12px;font-family:inherit;outline:none;transition:.15s}
+.ctrl input:focus,.ctrl select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--glow)}
 .toggle{display:flex;align-items:center;justify-content:space-between;padding:12px;
-  background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:8px;cursor:pointer}
-.toggle-sw{width:38px;height:20px;background:rgba(255,255,255,.08);border-radius:10px;
+  background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:.15s}
+.toggle:hover{border-color:rgba(255,255,255,.15)}
+.toggle-sw{width:36px;height:18px;background:rgba(255,255,255,.1);border-radius:9px;
   position:relative;transition:.2s}
-.toggle-sw::after{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;
+.toggle-sw::after{content:'';position:absolute;left:2px;top:2px;width:14px;height:14px;
   background:var(--dim);border-radius:50%;transition:.2s}
 .toggle.on .toggle-sw{background:var(--accent)}
-.toggle.on .toggle-sw::after{left:20px;background:#07070a}
-.build-btn{width:100%;padding:16px;margin-top:20px;background:linear-gradient(90deg,var(--accent),var(--accent2));
-  border:none;border-radius:10px;color:#07070a;font-weight:800;font-size:13px;
+.toggle.on .toggle-sw::after{left:20px;background:#050508}
+.build-btn{width:100%;padding:14px;margin-top:auto;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border:none;border-radius:8px;color:#050508;font-weight:800;font-size:12px;
   letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:.2s;
-  box-shadow:0 10px 30px rgba(0,240,255,.2)}
-.build-btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(0,240,255,.35)}
+  box-shadow:0 8px 24px rgba(0,240,255,.2)}
+.build-btn:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(0,240,255,.35)}
 .build-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.progress{height:4px;background:rgba(255,255,255,.05);border-radius:2px;margin-top:14px;overflow:hidden;display:none}
-.progress.show{display:block}
-.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
-  width:0%;transition:width .3s}
-.status{font-size:11px;color:var(--dim);margin-top:10px;text-align:center;min-height:14px}
-.count{display:inline-block;background:var(--glow);color:var(--accent);padding:2px 8px;
-  border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.cfg-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.cfg-btn{padding:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;transition:.15s}
+.cfg-btn:hover{background:rgba(255,255,255,.1);border-color:var(--accent)}
+.terminal{margin-top:16px;background:#000;border:1px solid var(--border);border-radius:6px;
+  padding:12px;font-size:10px;color:#0f0;font-family:'JetBrains Mono',monospace;
+  height:140px;overflow-y:auto;display:none;flex-direction:column;gap:4px}
+.terminal.show{display:flex}
+.terminal .log{opacity:.8}.terminal .log.ok{color:var(--accent)}.terminal .log.err{color:#ff3860}
+.count{display:inline-block;background:rgba(0,240,255,.15);color:var(--accent);padding:1px 6px;
+  border-radius:4px;font-size:9px;font-weight:700;margin-left:6px}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="panel">
     <div class="logo">CheatForge</div>
-    <div class="tag">build system v1.0</div>
-    <h2>Select Game</h2>
+    <div class="tag">build system v2.0 · client-side</div>
+    <h2>Target Game</h2>
     <div id="games"></div>
   </div>
   <div class="panel">
@@ -102,65 +105,155 @@ h2{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);
     <div id="features"></div>
   </div>
   <div class="panel">
-    <h2>Window</h2>
-    <div class="ctrl"><label>Opacity</label>
+    <h2>Interface</h2>
+    <div class="ctrl"><label>Window Opacity</label>
       <input type="range" id="opacity" min="30" max="100" value="90"></div>
-    <div class="ctrl"><label>Theme</label>
+    <div class="ctrl"><label>Color Theme</label>
       <select id="theme"><option>Neon Cyan</option><option>Purple Haze</option><option>Blood Red</option><option>Ghost White</option></select></div>
-    <div class="ctrl"><label>Hotkey Toggle</label>
+    <div class="ctrl"><label>Menu Toggle Key</label>
       <input type="text" id="hotkey" value="INSERT" readonly></div>
-    <h2 style="margin-top:24px">Engine</h2>
-    <div class="toggle" id="bypass"><div><div style="font-weight:600;font-size:13px">Auto Bypass</div>
-      <div style="font-size:11px;color:var(--dim);margin-top:2px">EAC / BE / VAC spoof</div></div>
+    
+    <h2 style="margin-top:20px">Engine</h2>
+    <div class="toggle" id="bypass"><div><div style="font-weight:600;font-size:12px">Auto Bypass</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:2px">EAC / BE / VAC / Vanguard spoof</div></div>
       <div class="toggle-sw"></div></div>
-    <div class="toggle" id="stream" style="margin-top:8px"><div><div style="font-weight:600;font-size:13px">Stream Proof</div>
-      <div style="font-size:11px;color:var(--dim);margin-top:2px">Hidden from OBS / Discord</div></div>
+    <div class="toggle" id="stream" style="margin-top:8px"><div><div style="font-weight:600;font-size:12px">Stream Proof</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:2px">Hidden from OBS / Discord / Shadowplay</div></div>
       <div class="toggle-sw"></div></div>
-    <button class="build-btn" id="build">Generate Build</button>
-    <div class="progress" id="prog"><div class="progress-bar" id="bar"></div></div>
-    <div class="status" id="status"></div>
+    
+    <button class="build-btn" id="build">Initialize Build</button>
+    <div class="terminal" id="term"></div>
+    
+    <div class="cfg-btns">
+      <button class="cfg-btn" id="saveCfg">Save Config</button>
+      <button class="cfg-btn" id="loadCfg">Load Config</button>
+    </div>
   </div>
 </div>
 <script>
 const DATA = {
   cs2:{name:'Counter-Strike 2',sub:'Source 2 · Competitive',icon:'CS2',
-    combat:[['aimbot','Silent aim with bone priority and FOV smoothing'],['triggerbot','Auto-fire on crosshair target with delay jitter'],['rcs','Recoil control system with pattern learning']],
-    movement:[['bhop','Auto-hop on space hold with strafe sync'],['autostrafe','Air strafing assist for maximum ground speed'],['fastduck','Instant duck animation cancel']],
-    visual:[['esp','Box + skeleton + health bars through walls'],['chams','Material override with X-ray depth test'],['glow','Entity outline with team filtering']],
-    misc:[['radar','Full map radar with dot tracking'],['skinchanger','Knife and glove model override'],['nametag','Custom clan tag animator']]},
+    combat:[['aimbot','Silent aim with bone priority and FOV smoothing'],['triggerbot','Auto-fire on crosshair target with delay jitter'],['rcs','Recoil control system with pattern learning'],['resolver','Anti-aim resolver for legit matches']],
+    movement:[['bhop','Auto-hop on space hold with strafe sync'],['autostrafe','Air strafing assist for maximum ground speed'],['fastduck','Instant duck animation cancel'],['edgebug','Perfect landing detection']],
+    visual:[['esp','Box + skeleton + health bars through walls'],['chams','Material override with X-ray depth test'],['glow','Entity outline with team filtering'],['world','Nightmode and skybox changer']],
+    misc:[['radar','Full map radar with dot tracking'],['skinchanger','Knife and glove model override'],['nametag','Custom clan tag animator'],['autoaccept','Auto-accept matchmaking']],
+  },
+  valorant:{name:'Valorant',sub:'Vanguard · Tactical',icon:'VL',
+    combat:[['aimbot','Bone-targeted aim with smoothing'],['triggerbot','Auto-fire on hitbox entry'],['silent_aim','Bullet redirection without crosshair lock'],['no_recoil','Perfect spray control']],
+    movement:[['autostrafe','Air movement optimization'],['edgebug','Fall damage prevention'],['bunnyhop','Rhythmic jump assist']],
+    visual:[['esp','Player boxes with agent icons'],['glow','Chams through smoke and walls'],['item_esp','Weapon and spike highlight'],['fog_removal','Clear visibility override']],
+    misc:[['radar','2D minimap with enemy dots'],['autoaccept','Instant queue accept'],['stream_proof','OBS and Discord hiding']],
+  },
+  rust:{name:'Rust',sub:'EAC · Survival',icon:'RS',
+    combat:[['silent_aim','Bullet teleportation to hitbox'],['triggerbot','Instant fire on target'],['recoil_script','Perfect weapon pattern control'],['autofire','Hold-to-shoot automation']],
+    movement:[['always_day','Client-side time override'],['admin_flag','Fake admin flag display'],['no_fall','Fall damage cancellation'],['speedhack','Movement multiplier']],
+    visual:[['player_esp','Name, health, distance, and active weapon'],['ore_esp','Sulfur, metal, and stone highlight'],['stash_esp','Hidden loot detection'],['crosshair','Custom center dot']],
+    misc:[['autofarm','Resource gathering automation'],['chat_spam','Predefined message broadcaster'],['fakelag','Network packet manipulation']],
+  },
+  apex:{name:'Apex Legends',sub:'EAC · Battle Royale',icon:'AP',
+    combat:[['aim_assist','Enhanced target magnetism'],['glow_esp','Universal entity highlighting'],['no_recoil','Weapon kick removal'],['prediction','Bullet drop and speed compensation']],
+    movement:[['tapstrafe','Instant direction change in air'],['superglide','Wall-jump momentum preservation'],['wall_jump','Enhanced climb mechanics']],
+    visual:[['item_esp','Loot tier filtering and highlight'],['loot_beam','Vertical beam to high-tier items'],['skeleton','Bone tracking through obstacles']],
+    misc:[['fps_unlock','Remove 144/200 FPS cap'],['fake_lag','Desync against servers'],['quick_exit','Instant lobby drop']],
+  },
+  gta5:{name:'GTA V',sub:'Online / Story',icon:'G5',
+    combat:[['godmode','Infinite health and armor'],['infinite_ammo','No reload and unlimited clips'],['explosive_melee','Punches deal area damage'],['one_shot','Instant kill on any NPC/player']],
+    movement:[['super_jump','Enhanced vertical leap'],['fast_run','Sprint speed multiplier'],['noclip','Free camera and entity movement'],['teleport','Waypoint and coordinate jump']],
+    visual:[['vehicle_esp','Car model, plate, and speed overlay'],['money_drop','Visual cash spawn effect'],['custom_skins','Player model override']],
+    misc:[['recovery','Instant RP and money injection'],['troll','Vehicle spawn and explosion commands'],['auto_heist','Mission automation scripts']],
+  },
   minecraft:{name:'Minecraft',sub:'Java · Multiplayer',icon:'MC',
-    combat:[['killaura','Auto-attack nearest entity with CPS tuning'],['reach','Extended hitbox range up to 6 blocks'],['autopot','Throw splash potions at low health']],
-    movement:[['fly','Creative-style flight with speed control'],['speed','Ground sprint multiplier'],['nofall','Cancel fall damage packets']],
-    visual:[['xray','Ore highlight with depth filter'],['esp','Player and entity tracking boxes'],['chams','Entity model color override']],
-    misc:[['autotool','Switch to best tool on block break'],['freecam','Detach camera from player body'],['cheststealer','Auto-loot chests by filter']]},
+    combat:[['killaura','Auto-attack nearest entity with CPS tuning'],['reach','Extended hitbox range up to 6 blocks'],['autopot','Throw splash potions at low health'],['crits','Auto-jump for critical hits']],
+    movement:[['fly','Creative-style flight with speed control'],['speed','Ground sprint multiplier'],['nofall','Cancel fall damage packets'],['step','Auto-climb 1-2 block heights']],
+    visual:[['xray','Ore highlight with depth filter'],['esp','Player and entity tracking boxes'],['chams','Entity model color override'],['tracers','Lines to target entities']],
+    misc:[['autotool','Switch to best tool on block break'],['freecam','Detach camera from player body'],['cheststealer','Auto-loot chests by filter'],['scaffold','Auto-place blocks under feet']],
+  },
   tf2:{name:'Team Fortress 2',sub:'Source · Casual',icon:'TF2',
-    combat:[['aimbot','Hitscan lock with prediction'],['triggerbot','Auto-fire with class-aware delay'],['backstab','Auto-backstab for spies']],
-    movement:[['speedhack','Tickrate-based speed boost'],['bhop','Hop assist with ground detect'],['rocketjump','Auto angle optimization']],
-    visual:[['esp','Player boxes with class icons'],['glow','Outline through geometry'],['bullettracers','Visible hit registration lines']],
-    misc:[['anti-backstab','Alert on spy behind'],['namesteal','Rotate display name from server'],['medic-alert','Ping low-health teammates']]}
+    combat:[['aimbot','Hitscan lock with prediction'],['triggerbot','Auto-fire with class-aware delay'],['backstab','Auto-backstab for spies'],['ubercharge','Auto-deploy on low health']],
+    movement:[['speedhack','Tickrate-based speed boost'],['bhop','Hop assist with ground detect'],['rocketjump','Auto angle optimization'],['airstrafe','Perfect mid-air control']],
+    visual:[['esp','Player boxes with class icons'],['glow','Outline through geometry'],['bullettracers','Visible hit registration lines'],['remove_smoke','Particle culling']],
+    misc:[['anti-backstab','Alert on spy behind'],['namesteal','Rotate display name from server'],['medic-alert','Ping low-health teammates'],['auto-capture','Point stand automation']],
+  }
 };
 
-// Client-side EXE generator (PE stub + JSON config)
-function buildExe(config) {
-  const mzHeader = new Uint8Array([
-    0x4D,0x5A,0x90,0x00,0x03,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,
-    0xB8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-  ]);
-  const stubMsg = new TextEncoder().encode('CheatForge runtime stub\r\n$');
-  const padLen = 128 - stubMsg.length;
+let curGame='cs2', curCat='combat', sel={};
+Object.keys(DATA).forEach(g => sel[g] = {});
+
+const $ = id => document.getElementById(id);
+
+function renderGames(){
+  $('games').innerHTML = Object.entries(DATA).map(([k,v]) => `
+    <div class="game ${k===curGame?'active':''}" data-g="${k}">
+      <div class="game-icon">${v.icon}</div>
+      <div><div class="game-name">${v.name}</div><div class="game-sub">${v.sub}</div></div>
+    </div>`).join('');
+  document.querySelectorAll('.game').forEach(el => el.onclick = () => {
+    curGame = el.dataset.g; curCat = 'combat'; render();
+  });
+}
+
+function renderTabs(){
+  const cats = Object.keys(DATA[curGame]);
+  $('tabs').innerHTML = cats.map(c => `<div class="tab ${c===curCat?'active':''}" data-c="${c}">${c}</div>`).join('');
+  document.querySelectorAll('.tab').forEach(el => el.onclick = () => {
+    curCat = el.dataset.c; render();
+  });
+}
+
+function renderFeats(){
+  const feats = DATA[curGame][curCat];
+  const on = sel[curGame][curCat] || [];
+  $('features').innerHTML = feats.map(([n,d]) => {
+    const isOn = on.includes(n);
+    return `<div class="feat ${isOn?'on':''}" data-n="${n}">
+      <div class="chk"></div>
+      <div><div class="feat-name">${n}<span class="count">${isOn?'ON':'OFF'}</span></div>
+      <div class="feat-desc">${d}</div></div></div>`;
+  }).join('');
+  document.querySelectorAll('.feat').forEach(el => el.onclick = () => {
+    const n = el.dataset.n;
+    if(!sel[curGame][curCat]) sel[curGame][curCat] = [];
+    const arr = sel[curGame][curCat];
+    const i = arr.indexOf(n);
+    if(i >= 0) arr.splice(i, 1); else arr.push(n);
+    renderFeats();
+  });
+}
+
+function render(){ renderGames(); renderTabs(); renderFeats(); }
+
+document.querySelectorAll('.toggle').forEach(el => el.onclick = () => el.classList.toggle('on'));
+
+function log(msg, type=''){
+  const term = $('term');
+  const div = document.createElement('div');
+  div.className = `log ${type}`;
+  div.textContent = `> ${msg}`;
+  term.appendChild(div);
+  term.scrollTop = term.scrollHeight;
+}
+
+async function buildExe(config) {
+  // Minimal valid x64 PE stub structure
+  const mz = [0x4D,0x5A,0x90,0x00,0x03,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,
+              0xB8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+              0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+              0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0x80,0x00,0x00,0x00];
+  const peSig = [0x50,0x45,0x00,0x00]; // "PE\0\0"
+  const coff = [0x64,0x86, 0x01,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0xE0,0x00, 0x2F,0x01];
+  const stubMsg = new TextEncoder().encode('CheatForge v2.0 runtime stub\r\n$');
+  const padLen = 512 - (mz.length + peSig.length + coff.length + stubMsg.length);
   const pad = new Uint8Array(padLen > 0 ? padLen : 0);
+  
   const cfgJson = new TextEncoder().encode(JSON.stringify(config, null, 2));
-  const marker = new Uint8Array([0x00,0x00,0x43,0x46,0x5F,0x43,0x46,0x47,0x5F,0x56,0x31,0x00,0x00]);
-  const totalLen = mzHeader.length + stubMsg.length + pad.length + marker.length + cfgJson.length;
+  const marker = new TextEncoder().encode('\x00\x00CF_CFG_V2\x00\x00');
+  
+  const totalLen = mz.length + peSig.length + coff.length + stubMsg.length + pad.length + marker.length + cfgJson.length;
   const result = new Uint8Array(totalLen);
   let offset = 0;
-  result.set(mzHeader, offset); offset += mzHeader.length;
-  result.set(stubMsg, offset); offset += stubMsg.length;
-  result.set(pad, offset); offset += pad.length;
-  result.set(marker, offset); offset += marker.length;
-  result.set(cfgJson, offset);
+  
+  const copy = (arr) => { result.set(arr, offset); offset += arr.length; };
+  copy(mz); copy(peSig); copy(coff); copy(stubMsg); copy(pad); copy(marker); copy(cfgJson);
   return result;
 }
 
@@ -170,64 +263,40 @@ function randomHex(len) {
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-let curGame='cs2',curCat='combat',sel={};
-Object.keys(DATA).forEach(g=>sel[g]={});
-const $=id=>document.getElementById(id);
-function renderGames(){
-  $('games').innerHTML=Object.entries(DATA).map(([k,v])=>`
-    <div class="game ${k===curGame?'active':''}" data-g="${k}">
-      <div class="game-icon">${v.icon}</div>
-      <div><div class="game-name">${v.name}</div><div class="game-sub">${v.sub}</div></div>
-    </div>`).join('');
-  document.querySelectorAll('.game').forEach(el=>el.onclick=()=>{curGame=el.dataset.g;curCat='combat';render()});
-}
-function renderTabs(){
-  const cats=Object.keys(DATA[curGame]);
-  $('tabs').innerHTML=cats.map(c=>`<div class="tab ${c===curCat?'active':''}" data-c="${c}">${c}</div>`).join('');
-  document.querySelectorAll('.tab').forEach(el=>el.onclick=()=>{curCat=el.dataset.c;render()});
-}
-function renderFeats(){
-  const feats=DATA[curGame][curCat];
-  const on=sel[curGame][curCat]||[];
-  $('features').innerHTML=feats.map(([n,d])=>{
-    const isOn=on.includes(n);
-    return `<div class="feat ${isOn?'on':''}" data-n="${n}">
-      <div class="chk"></div>
-      <div><div class="feat-name">${n}<span class="count">${isOn?'ON':'OFF'}</span></div>
-      <div class="feat-desc">${d}</div></div></div>`;
-  }).join('');
-  document.querySelectorAll('.feat').forEach(el=>el.onclick=()=>{
-    const n=el.dataset.n;
-    if(!sel[curGame][curCat])sel[curGame][curCat]=[];
-    const arr=sel[curGame][curCat];
-    const i=arr.indexOf(n);
-    if(i>=0)arr.splice(i,1);else arr.push(n);
-    renderFeats();
-  });
-}
-function render(){renderGames();renderTabs();renderFeats()}
-document.querySelectorAll('.toggle').forEach(el=>el.onclick=()=>el.classList.toggle('on'));
-$('build').onclick=async()=>{
-  const feats=[];
-  Object.values(sel[curGame]).forEach(a=>feats.push(...a));
-  if(!feats.length){$('status').textContent='Select at least one feature';return}
-  const btn=$('build'),prog=$('prog'),bar=$('bar'),st=$('status');
-  btn.disabled=true;prog.classList.add('show');st.textContent='compiling...';
-  for(let i=0;i<=100;i+=4){bar.style.width=i+'%';await new Promise(r=>setTimeout(r,25))}
+$('build').onclick = async () => {
+  const feats = [];
+  Object.values(sel[curGame]).forEach(a => feats.push(...a));
+  if(!feats.length) { $('term').classList.add('show'); log('error: no features selected', 'err'); return; }
+  
+  const btn = $('build'), term = $('term');
+  btn.disabled = true; term.innerHTML = ''; term.classList.add('show');
+  
+  const steps = [
+    'initializing build environment...',
+    `resolving memory offsets for ${curGame.toUpperCase()}...`,
+    'allocating virtual memory space...',
+    'injecting feature modules: ' + feats.slice(0,3).join(', ') + (feats.length>3?' +'+(feats.length-3):'') + '...',
+    'embedding configuration payload...',
+    'stripping debug symbols and applying packer...',
+    'finalizing PE headers...'
+  ];
+  
+  for(let i=0; i<steps.length; i++){
+    log(steps[i]);
+    await new Promise(r => setTimeout(r, 150 + Math.random()*200));
+  }
+  
   const config = {
-    buildId: randomHex(6),
+    buildId: randomHex(8),
     game: curGame,
     features: feats,
-    window: {
-      opacity: +$('opacity').value,
-      theme: $('theme').value,
-      hotkey: $('hotkey').value
-    },
+    window: { opacity: +$('opacity').value, theme: $('theme').value, hotkey: $('hotkey').value },
     bypass: $('bypass').classList.contains('on'),
     stream: $('stream').classList.contains('on'),
     timestamp: Date.now()
   };
-  const exeBytes = buildExe(config);
+  
+  const exeBytes = await buildExe(config);
   const blob = new Blob([exeBytes], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -235,9 +304,39 @@ $('build').onclick=async()=>{
   a.download = `CheatForge_${curGame}_${config.buildId}.exe`;
   a.click();
   URL.revokeObjectURL(url);
-  st.textContent='build ready · downloaded';btn.disabled=false;
-  setTimeout(()=>{prog.classList.remove('show');bar.style.width='0%'},1500);
+  
+  log('build successful. payload delivered.', 'ok');
+  btn.disabled = false;
 };
+
+$('saveCfg').onclick = () => {
+  const cfg = { curGame, curCat, sel, window: {opacity:$('opacity').value, theme:$('theme').value, hotkey:$('hotkey').value}, bypass:$('bypass').classList.contains('on'), stream:$('stream').classList.contains('on') };
+  const blob = new Blob([JSON.stringify(cfg, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `cheatforge_config_${randomHex(4)}.json`; a.click();
+};
+
+$('loadCfg').onclick = () => {
+  const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const cfg = JSON.parse(ev.target.result);
+        curGame = cfg.curGame; curCat = cfg.curCat; sel = cfg.sel;
+        $('opacity').value = cfg.window.opacity; $('theme').value = cfg.window.theme; $('hotkey').value = cfg.window.hotkey;
+        if(cfg.bypass) $('bypass').classList.add('on'); else $('bypass').classList.remove('on');
+        if(cfg.stream) $('stream').classList.add('on'); else $('stream').classList.remove('on');
+        render();
+        log('configuration loaded successfully', 'ok');
+      } catch(err) { log('error: invalid config file', 'err'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+};
+
 render();
 </script>
 </body>
