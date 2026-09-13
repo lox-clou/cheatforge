@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import os
+
+html = r'''<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -80,4 +82,8 @@ log('build ok: CheatForge_'+g+'.exe','ok');$('build').disabled=false};
 R();
 </script>
 </body>
-</html>
+</html>'''
+
+with open('index.html', 'w', encoding='utf-8') as f:
+    f.write(html)
+print('OK: index.html создан (' + str(len(html)) + ' байт)')
