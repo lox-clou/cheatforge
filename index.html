@@ -3,136 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CheatForge // v2.0</title>
+<title>CheatForge // v3.0 Professional</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600;700;900&display=swap');
 :root{
-  --bg:#050508; --panel:rgba(15,15,20,.7); --border:rgba(255,255,255,.08);
-  --text:#e2e2e9; --dim:#6b6b7b; --accent:#00f0ff; --glow:rgba(0,240,255,.15);
-  --accent2:#bd00ff; --radius:10px;
+  --bg:#030305; --panel:rgba(12,12,18,.85); --border:rgba(255,255,255,.06);
+  --text:#e8e8f0; --dim:#5a5a6e; --accent:#00f0ff; --glow:rgba(0,240,255,.2);
+  --accent2:#bd00ff; --accent3:#ff006e; --radius:8px;
+  --success:#00ff88; --warning:#ffaa00; --error:#ff3860;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'JetBrains Mono','Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
-  height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center}
-body::before{content:'';position:fixed;inset:-50%;
-  background:radial-gradient(circle at 20% 30%,var(--glow) 0%,transparent 40%),
-             radial-gradient(circle at 80% 70%,rgba(189,0,255,.08) 0%,transparent 40%);
-  animation:drift 25s infinite alternate ease-in-out;z-index:0;pointer-events:none}
-@keyframes drift{to{transform:translate(-3%,-3%)}}
-.app{position:relative;z-index:1;width:1280px;height:800px;display:grid;
-  grid-template-columns:280px 1fr 320px;gap:16px;padding:20px}
-.panel{background:var(--panel);backdrop-filter:blur(24px);border:1px solid var(--border);
-  border-radius:var(--radius);padding:20px;overflow-y:auto;display:flex;flex-direction:column}
-.panel::-webkit-scrollbar{width:4px}
-.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-h2{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--dim);
-  margin-bottom:16px;font-weight:700;display:flex;align-items:center;gap:8px}
-h2::before{content:'';width:8px;height:8px;background:var(--accent);border-radius:2px;box-shadow:0 0 8px var(--accent)}
-.logo{font-size:24px;font-weight:900;letter-spacing:-1px;margin-bottom:4px;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.tag{font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;opacity:.7}
-.game{display:flex;align-items:center;gap:14px;padding:14px;border-radius:8px;
-  cursor:pointer;border:1px solid transparent;margin-bottom:6px;transition:.2s}
-.game:hover{background:rgba(255,255,255,.03);border-color:var(--border)}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center}
+body::before{content:'';position:fixed;inset:-50%;background:radial-gradient(circle at 15% 25%,rgba(0,240,255,.08) 0%,transparent 50%),radial-gradient(circle at 85% 75%,rgba(189,0,255,.06) 0%,transparent 50%);animation:drift 30s infinite alternate ease-in-out;z-index:0;pointer-events:none}
+@keyframes drift{0%{transform:translate(0,0) rotate(0deg)}100%{transform:translate(-4%,-4%) rotate(2deg)}}
+.app{position:relative;z-index:1;width:1400px;height:850px;display:grid;grid-template-columns:300px 1fr 380px;gap:16px;padding:20px}
+.panel{background:var(--panel);backdrop-filter:blur(30px);border:1px solid var(--border);border-radius:var(--radius);padding:24px;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.panel::-webkit-scrollbar{width:6px}.panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+h2{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:18px;font-weight:700;display:flex;align-items:center;gap:10px}
+h2::before{content:'';width:3px;height:14px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:2px;box-shadow:0 0 10px var(--glow)}
+.logo{font-size:28px;font-weight:900;letter-spacing:-1px;margin-bottom:6px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 50%,var(--accent3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tag{font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:30px;opacity:.6;font-family:'JetBrains Mono',monospace}
+.game{display:flex;align-items:center;gap:14px;padding:14px;border-radius:6px;cursor:pointer;border:1px solid transparent;margin-bottom:6px;transition:all .2s}
+.game:hover{background:rgba(255,255,255,.03);border-color:var(--border);transform:translateX(4px)}
 .game.active{background:linear-gradient(90deg,rgba(0,240,255,.08),transparent);border-left:3px solid var(--accent)}
-.game-icon{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;
-  justify-content:center;font-weight:900;font-size:12px;flex-shrink:0;
-  background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--accent)}
-.game-name{font-weight:700;font-size:13px}
-.game-sub{font-size:10px;color:var(--dim);margin-top:3px}
-.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;flex-wrap:wrap}
-.tab{padding:6px 12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;
-  color:var(--dim);cursor:pointer;border-radius:4px;transition:.15s;font-weight:600}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--accent);background:rgba(0,240,255,.1)}
-.feat{display:flex;align-items:flex-start;gap:12px;padding:10px;border-radius:6px;
-  margin-bottom:4px;cursor:pointer;transition:.15s;border:1px solid transparent}
-.feat:hover{background:rgba(255,255,255,.02);border-color:var(--border)}
-.feat.on{background:rgba(0,240,255,.06);border-color:rgba(0,240,255,.3)}
-.chk{width:16px;height:16px;border:1.5px solid var(--dim);border-radius:4px;
-  flex-shrink:0;margin-top:2px;position:relative;transition:.15s}
-.feat.on .chk{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px var(--glow)}
-.feat.on .chk::after{content:'';position:absolute;left:4px;top:1px;width:4px;height:8px;
-  border:solid #050508;border-width:0 2px 2px 0;transform:rotate(45deg)}
-.feat-name{font-weight:600;font-size:12px}
-.feat-desc{font-size:10px;color:var(--dim);margin-top:3px;line-height:1.4}
-.ctrl{margin-bottom:16px}
-.ctrl label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--dim);margin-bottom:8px;font-weight:600}
-.ctrl input[type=range]{width:100%;accent-color:var(--accent);height:4px;background:rgba(255,255,255,.1);border-radius:2px}
-.ctrl input[type=text],.ctrl select{width:100%;background:rgba(0,0,0,.4);
-  border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);
-  font-size:12px;font-family:inherit;outline:none;transition:.15s}
-.ctrl input:focus,.ctrl select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--glow)}
-.toggle{display:flex;align-items:center;justify-content:space-between;padding:12px;
-  background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:.15s}
-.toggle:hover{border-color:rgba(255,255,255,.15)}
-.toggle-sw{width:36px;height:18px;background:rgba(255,255,255,.1);border-radius:9px;
-  position:relative;transition:.2s}
-.toggle-sw::after{content:'';position:absolute;left:2px;top:2px;width:14px;height:14px;
-  background:var(--dim);border-radius:50%;transition:.2s}
-.toggle.on .toggle-sw{background:var(--accent)}
-.toggle.on .toggle-sw::after{left:20px;background:#050508}
-.build-btn{width:100%;padding:14px;margin-top:12px;background:linear-gradient(90deg,var(--accent),var(--accent2));
-  border:none;border-radius:8px;color:#050508;font-weight:800;font-size:12px;
-  letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:.2s;
-  box-shadow:0 8px 24px rgba(0,240,255,.2)}
-.build-btn:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(0,240,255,.35)}
-.build-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.preview-btn{width:100%;padding:12px;margin-top:8px;background:rgba(255,255,255,.05);
-  border:1px solid var(--border);border-radius:8px;color:var(--text);font-weight:700;
-  font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:.2s}
+.game-icon{width:40px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--accent);font-family:'JetBrains Mono',monospace}
+.game-name{font-weight:700;font-size:14px}.game-sub{font-size:10px;color:var(--dim);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;flex-wrap:wrap}
+.tab{padding:8px 14px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);cursor:pointer;border-radius:4px;transition:all .15s;font-weight:600;border:1px solid transparent}
+.tab:hover{color:var(--text);background:rgba(255,255,255,.03)}.tab.active{color:var(--accent);background:rgba(0,240,255,.08);border-color:rgba(0,240,255,.2)}
+.feat{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all .15s;border:1px solid transparent}
+.feat:hover{background:rgba(255,255,255,.02);border-color:var(--border)}.feat.on{background:rgba(0,240,255,.05);border-color:rgba(0,240,255,.25)}
+.chk{width:18px;height:18px;border:2px solid var(--dim);border-radius:4px;flex-shrink:0;margin-top:1px;position:relative;transition:all .2s}
+.feat.on .chk{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:var(--accent);box-shadow:0 0 12px var(--glow)}
+.feat.on .chk::after{content:'';position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid #030305;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.feat-name{font-weight:600;font-size:13px}.feat-desc{font-size:10px;color:var(--dim);margin-top:4px;line-height:1.5}
+.count{display:inline-block;background:rgba(0,240,255,.15);color:var(--accent);padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;margin-left:8px;font-family:'JetBrains Mono',monospace}
+.ctrl{margin-bottom:18px}.ctrl label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;font-weight:600}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent);height:4px;background:rgba(255,255,255,.1);border-radius:2px;outline:none}
+.ctrl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 0 10px var(--glow)}
+.ctrl input[type=text],.ctrl select{width:100%;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:all .15s}
+.ctrl input:focus,.ctrl select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.toggle:hover{border-color:rgba(255,255,255,.15)}.toggle-sw{width:38px;height:20px;background:rgba(255,255,255,.1);border-radius:10px;position:relative;transition:all .2s}
+.toggle-sw::after{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;background:var(--dim);border-radius:50%;transition:all .2s}
+.toggle.on .toggle-sw{background:linear-gradient(90deg,var(--accent),var(--accent2))}.toggle.on .toggle-sw::after{left:20px;background:#030305}
+.build-btn{width:100%;padding:16px;margin-top:12px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);border:none;border-radius:6px;color:#030305;font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;box-shadow:0 8px 24px rgba(0,240,255,.25);position:relative;overflow:hidden}
+.build-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,240,255,.4)}.build-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.preview-btn{width:100%;padding:14px;margin-top:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s}
 .preview-btn:hover{background:rgba(255,255,255,.1);border-color:var(--accent)}
 .cfg-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.cfg-btn{padding:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);
-  border-radius:6px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;transition:.15s}
+.cfg-btn{padding:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
 .cfg-btn:hover{background:rgba(255,255,255,.1);border-color:var(--accent)}
-.terminal{margin-top:16px;background:#000;border:1px solid var(--border);border-radius:6px;
-  padding:12px;font-size:10px;color:#0f0;font-family:'JetBrains Mono',monospace;
-  height:140px;overflow-y:auto;display:none;flex-direction:column;gap:4px}
-.terminal.show{display:flex}
-.terminal .log{opacity:.8}.terminal .log.ok{color:var(--accent)}.terminal .log.err{color:#ff3860}
-.count{display:inline-block;background:rgba(0,240,255,.15);color:var(--accent);padding:1px 6px;
-  border-radius:4px;font-size:9px;font-weight:700;margin-left:6px}
-
-/* Preview Overlay Styles */
-.preview-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:none;
-  align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.terminal{margin-top:16px;background:#000;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:10px;color:#0f0;font-family:'JetBrains Mono',monospace;height:160px;overflow-y:auto;display:none;flex-direction:column;gap:4px}
+.terminal.show{display:flex}.terminal .log{opacity:.8}.terminal .log.ok{color:var(--success)}.terminal .log.err{color:var(--error)}.terminal .log.warn{color:var(--warning)}
+.preview-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(12px)}
 .preview-overlay.show{display:flex}
-.preview-content{width:90%;height:90%;background:#0a0a0f;border:1px solid var(--border);
-  border-radius:12px;position:relative;overflow:hidden}
-.preview-header{position:absolute;top:0;left:0;right:0;height:40px;background:rgba(0,0,0,.6);
-  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
-  padding:0 16px;z-index:10}
-.preview-title{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1px}
-.preview-close{width:28px;height:28px;background:rgba(255,255,255,.05);border:1px solid var(--border);
-  border-radius:4px;color:var(--text);cursor:pointer;font-size:16px;line-height:1;transition:.15s}
-.preview-close:hover{background:rgba(255,0,0,.2);border-color:#ff3860;color:#ff3860}
-.preview-canvas{position:absolute;inset:40px 0 0 0;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%)}
-.preview-canvas::before{content:'';position:absolute;inset:0;
-  background-image:repeating-linear-gradient(0deg,transparent,transparent 49px,rgba(0,240,255,.03) 50px),
-                    repeating-linear-gradient(90deg,transparent,transparent 49px,rgba(0,240,255,.03) 50px)}
-.esp-box{position:absolute;border:2px solid var(--accent);border-radius:2px;
-  box-shadow:0 0 10px var(--glow),inset 0 0 10px var(--glow)}
-.esp-health{position:absolute;bottom:-16px;left:0;width:100%;height:4px;background:rgba(0,0,0,.6);border-radius:2px;overflow:hidden}
-.esp-health-bar{height:100%;background:linear-gradient(90deg,#ff3860,#00f0ff)}
-.esp-name{position:absolute;top:-18px;left:50%;transform:translateX(-50%);
-  font-size:10px;font-weight:700;color:var(--accent);white-space:nowrap;
-  text-shadow:0 0 10px var(--glow)}
-.esp-skeleton{position:absolute;border:1px solid rgba(0,240,255,.4)}
-.glow-entity{position:absolute;border-radius:50%;filter:blur(8px);opacity:.6}
-.tracer{position:absolute;width:2px;background:linear-gradient(180deg,var(--accent),transparent)}
-.fps-counter{position:absolute;top:16px;right:16px;font-size:14px;font-weight:700;
-  color:var(--accent);text-shadow:0 0 10px var(--glow)}
-.watermark{position:absolute;bottom:16px;right:16px;font-size:10px;color:var(--dim);
-  letter-spacing:1px}
+.preview-content{width:95%;height:95%;background:#0a0a0f;border:1px solid var(--border);border-radius:12px;position:relative;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.8)}
+.preview-header{position:absolute;top:0;left:0;right:0;height:44px;background:rgba(0,0,0,.7);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10}
+.preview-title{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1px;font-family:'JetBrains Mono',monospace}
+.preview-close{width:32px;height:32px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;font-size:18px;line-height:1;transition:all .15s}
+.preview-close:hover{background:rgba(255,0,0,.2);border-color:var(--error);color:var(--error)}
+.preview-canvas{position:absolute;inset:44px 0 0 0;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%);overflow:hidden}
+.fps-counter{position:absolute;top:16px;right:16px;font-size:14px;font-weight:700;color:var(--success);text-shadow:0 0 10px rgba(0,255,136,.3);font-family:'JetBrains Mono',monospace}
+.watermark{position:absolute;bottom:16px;right:16px;font-size:10px;color:var(--dim);letter-spacing:1px;font-family:'JetBrains Mono',monospace}
+.esp-box{position:absolute;border:2px solid var(--accent);border-radius:2px;box-shadow:0 0 15px var(--glow)}
+.esp-name{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;text-shadow:0 0 10px var(--glow);font-family:'JetBrains Mono',monospace}
+.esp-health{position:absolute;bottom:-18px;left:0;width:100%;height:4px;background:rgba(0,0,0,.6);border-radius:2px;overflow:hidden}
+.esp-health-bar{height:100%;background:linear-gradient(90deg,#ff3860,#00ff88)}
+.crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:24px;height:24px;border:2px solid var(--accent);border-radius:50%;box-shadow:0 0 10px var(--glow)}
+.fov-circle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:2px dashed rgba(0,240,255,.3);border-radius:50%;pointer-events:none}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="panel">
     <div class="logo">CheatForge</div>
-    <div class="tag">build system v2.0 · client-side</div>
+    <div class="tag">v3.0  professional build system</div>
     <h2>Target Game</h2>
     <div id="games"></div>
   </div>
@@ -142,368 +88,44 @@ h2::before{content:'';width:8px;height:8px;background:var(--accent);border-radiu
   </div>
   <div class="panel">
     <h2>Interface</h2>
-    <div class="ctrl"><label>Window Opacity</label>
-      <input type="range" id="opacity" min="30" max="100" value="90"></div>
-    <div class="ctrl"><label>Color Theme</label>
-      <select id="theme"><option>Neon Cyan</option><option>Purple Haze</option><option>Blood Red</option><option>Ghost White</option></select></div>
-    <div class="ctrl"><label>Menu Toggle Key</label>
-      <input type="text" id="hotkey" value="INSERT" readonly></div>
-    
+    <div class="ctrl"><label>Window Opacity</label><input type="range" id="opacity" min="30" max="100" value="90"></div>
+    <div class="ctrl"><label>Color Theme</label><select id="theme"><option>Neon Cyan</option><option>Purple Haze</option><option>Blood Red</option><option>Ghost White</option><option>Matrix Green</option></select></div>
+    <div class="ctrl"><label>Menu Toggle Key</label><input type="text" id="hotkey" value="INSERT" readonly></div>
     <h2 style="margin-top:20px">Engine</h2>
-    <div class="toggle" id="bypass"><div><div style="font-weight:600;font-size:12px">Auto Bypass</div>
-      <div style="font-size:10px;color:var(--dim);margin-top:2px">EAC / BE / VAC / Vanguard spoof</div></div>
-      <div class="toggle-sw"></div></div>
-    <div class="toggle" id="stream" style="margin-top:8px"><div><div style="font-weight:600;font-size:12px">Stream Proof</div>
-      <div style="font-size:10px;color:var(--dim);margin-top:2px">Hidden from OBS / Discord / Shadowplay</div></div>
-      <div class="toggle-sw"></div></div>
-    
+    <div class="toggle" id="bypass"><div><div style="font-weight:600;font-size:12px">Auto Bypass</div><div style="font-size:10px;color:var(--dim);margin-top:2px">EAC / BE / VAC / Vanguard spoof</div></div><div class="toggle-sw"></div></div>
+    <div class="toggle" id="stream"><div><div style="font-weight:600;font-size:12px">Stream Proof</div><div style="font-size:10px;color:var(--dim);margin-top:2px">Hidden from OBS / Discord</div></div><div class="toggle-sw"></div></div>
+    <div class="toggle" id="persistence"><div><div style="font-weight:600;font-size:12px">Persistence</div><div style="font-size:10px;color:var(--dim);margin-top:2px">Auto-inject on game launch</div></div><div class="toggle-sw"></div></div>
     <button class="build-btn" id="build">Initialize Build</button>
-    <button class="preview-btn" id="preview">Preview Overlay</button>
+    <button class="preview-btn" id="preview">Preview In-Game</button>
     <div class="terminal" id="term"></div>
-    
-    <div class="cfg-btns">
-      <button class="cfg-btn" id="saveCfg">Save Config</button>
-      <button class="cfg-btn" id="loadCfg">Load Config</button>
-    </div>
+    <div class="cfg-btns"><button class="cfg-btn" id="saveCfg">Save Config</button><button class="cfg-btn" id="loadCfg">Load Config</button></div>
   </div>
 </div>
-
-<!-- Preview Overlay -->
 <div class="preview-overlay" id="previewOverlay">
   <div class="preview-content">
-    <div class="preview-header">
-      <div class="preview-title">IN-GAME PREVIEW — <span id="previewGameName">CS2</span></div>
-      <button class="preview-close" id="closePreview">×</button>
-    </div>
+    <div class="preview-header"><div class="preview-title">IN-GAME PREVIEW  <span id="previewGameName">CS2</span></div><button class="preview-close" id="closePreview"></button></div>
     <div class="preview-canvas" id="previewCanvas"></div>
     <div class="fps-counter">FPS: 247</div>
-    <div class="watermark">CheatForge v2.0</div>
+    <div class="watermark">CheatForge v3.0</div>
   </div>
 </div>
-
 <script>
-const DATA = {
-  cs2:{name:'Counter-Strike 2',sub:'Source 2 · Competitive',icon:'CS2',
-    combat:[['aimbot','Silent aim with bone priority and FOV smoothing'],['triggerbot','Auto-fire on crosshair target with delay jitter'],['rcs','Recoil control system with pattern learning'],['resolver','Anti-aim resolver for legit matches']],
-    movement:[['bhop','Auto-hop on space hold with strafe sync'],['autostrafe','Air strafing assist for maximum ground speed'],['fastduck','Instant duck animation cancel'],['edgebug','Perfect landing detection']],
-    visual:[['esp','Box + skeleton + health bars through walls'],['chams','Material override with X-ray depth test'],['glow','Entity outline with team filtering'],['world','Nightmode and skybox changer']],
-    misc:[['radar','Full map radar with dot tracking'],['skinchanger','Knife and glove model override'],['nametag','Custom clan tag animator'],['autoaccept','Auto-accept matchmaking']],
-  },
-  valorant:{name:'Valorant',sub:'Vanguard · Tactical',icon:'VL',
-    combat:[['aimbot','Bone-targeted aim with smoothing'],['triggerbot','Auto-fire on hitbox entry'],['silent_aim','Bullet redirection without crosshair lock'],['no_recoil','Perfect spray control']],
-    movement:[['autostrafe','Air movement optimization'],['edgebug','Fall damage prevention'],['bunnyhop','Rhythmic jump assist']],
-    visual:[['esp','Player boxes with agent icons'],['glow','Chams through smoke and walls'],['item_esp','Weapon and spike highlight'],['fog_removal','Clear visibility override']],
-    misc:[['radar','2D minimap with enemy dots'],['autoaccept','Instant queue accept'],['stream_proof','OBS and Discord hiding']],
-  },
-  rust:{name:'Rust',sub:'EAC · Survival',icon:'RS',
-    combat:[['silent_aim','Bullet teleportation to hitbox'],['triggerbot','Instant fire on target'],['recoil_script','Perfect weapon pattern control'],['autofire','Hold-to-shoot automation']],
-    movement:[['always_day','Client-side time override'],['admin_flag','Fake admin flag display'],['no_fall','Fall damage cancellation'],['speedhack','Movement multiplier']],
-    visual:[['player_esp','Name, health, distance, and active weapon'],['ore_esp','Sulfur, metal, and stone highlight'],['stash_esp','Hidden loot detection'],['crosshair','Custom center dot']],
-    misc:[['autofarm','Resource gathering automation'],['chat_spam','Predefined message broadcaster'],['fakelag','Network packet manipulation']],
-  },
-  apex:{name:'Apex Legends',sub:'EAC · Battle Royale',icon:'AP',
-    combat:[['aim_assist','Enhanced target magnetism'],['glow_esp','Universal entity highlighting'],['no_recoil','Weapon kick removal'],['prediction','Bullet drop and speed compensation']],
-    movement:[['tapstrafe','Instant direction change in air'],['superglide','Wall-jump momentum preservation'],['wall_jump','Enhanced climb mechanics']],
-    visual:[['item_esp','Loot tier filtering and highlight'],['loot_beam','Vertical beam to high-tier items'],['skeleton','Bone tracking through obstacles']],
-    misc:[['fps_unlock','Remove 144/200 FPS cap'],['fake_lag','Desync against servers'],['quick_exit','Instant lobby drop']],
-  },
-  gta5:{name:'GTA V',sub:'Online / Story',icon:'G5',
-    combat:[['godmode','Infinite health and armor'],['infinite_ammo','No reload and unlimited clips'],['explosive_melee','Punches deal area damage'],['one_shot','Instant kill on any NPC/player']],
-    movement:[['super_jump','Enhanced vertical leap'],['fast_run','Sprint speed multiplier'],['noclip','Free camera and entity movement'],['teleport','Waypoint and coordinate jump']],
-    visual:[['vehicle_esp','Car model, plate, and speed overlay'],['money_drop','Visual cash spawn effect'],['custom_skins','Player model override']],
-    misc:[['recovery','Instant RP and money injection'],['troll','Vehicle spawn and explosion commands'],['auto_heist','Mission automation scripts']],
-  },
-  minecraft:{name:'Minecraft',sub:'Java · Multiplayer',icon:'MC',
-    combat:[['killaura','Auto-attack nearest entity with CPS tuning'],['reach','Extended hitbox range up to 6 blocks'],['autopot','Throw splash potions at low health'],['crits','Auto-jump for critical hits']],
-    movement:[['fly','Creative-style flight with speed control'],['speed','Ground sprint multiplier'],['nofall','Cancel fall damage packets'],['step','Auto-climb 1-2 block heights']],
-    visual:[['xray','Ore highlight with depth filter'],['esp','Player and entity tracking boxes'],['chams','Entity model color override'],['tracers','Lines to target entities']],
-    misc:[['autotool','Switch to best tool on block break'],['freecam','Detach camera from player body'],['cheststealer','Auto-loot chests by filter'],['scaffold','Auto-place blocks under feet']],
-  },
-  tf2:{name:'Team Fortress 2',sub:'Source · Casual',icon:'TF2',
-    combat:[['aimbot','Hitscan lock with prediction'],['triggerbot','Auto-fire with class-aware delay'],['backstab','Auto-backstab for spies'],['ubercharge','Auto-deploy on low health']],
-    movement:[['speedhack','Tickrate-based speed boost'],['bhop','Hop assist with ground detect'],['rocketjump','Auto angle optimization'],['airstrafe','Perfect mid-air control']],
-    visual:[['esp','Player boxes with class icons'],['glow','Outline through geometry'],['bullettracers','Visible hit registration lines'],['remove_smoke','Particle culling']],
-    misc:[['anti-backstab','Alert on spy behind'],['namesteal','Rotate display name from server'],['medic-alert','Ping low-health teammates'],['auto-capture','Point stand automation']],
-  }
-};
-
-let curGame='cs2', curCat='combat', sel={};
-Object.keys(DATA).forEach(g => sel[g] = {});
-
-const $ = id => document.getElementById(id);
-
-function renderGames(){
-  $('games').innerHTML = Object.entries(DATA).map(([k,v]) => `
-    <div class="game ${k===curGame?'active':''}" data-g="${k}">
-      <div class="game-icon">${v.icon}</div>
-      <div><div class="game-name">${v.name}</div><div class="game-sub">${v.sub}</div></div>
-    </div>`).join('');
-  document.querySelectorAll('.game').forEach(el => el.onclick = () => {
-    curGame = el.dataset.g; curCat = 'combat'; render();
-  });
-}
-
-function renderTabs(){
-  const cats = Object.keys(DATA[curGame]);
-  $('tabs').innerHTML = cats.map(c => `<div class="tab ${c===curCat?'active':''}" data-c="${c}">${c}</div>`).join('');
-  document.querySelectorAll('.tab').forEach(el => el.onclick = () => {
-    curCat = el.dataset.c; render();
-  });
-}
-
-function renderFeats(){
-  const feats = DATA[curGame][curCat];
-  const on = sel[curGame][curCat] || [];
-  $('features').innerHTML = feats.map(([n,d]) => {
-    const isOn = on.includes(n);
-    return `<div class="feat ${isOn?'on':''}" data-n="${n}">
-      <div class="chk"></div>
-      <div><div class="feat-name">${n}<span class="count">${isOn?'ON':'OFF'}</span></div>
-      <div class="feat-desc">${d}</div></div></div>`;
-  }).join('');
-  document.querySelectorAll('.feat').forEach(el => el.onclick = () => {
-    const n = el.dataset.n;
-    if(!sel[curGame][curCat]) sel[curGame][curCat] = [];
-    const arr = sel[curGame][curCat];
-    const i = arr.indexOf(n);
-    if(i >= 0) arr.splice(i, 1); else arr.push(n);
-    renderFeats();
-  });
-}
-
-function render(){ renderGames(); renderTabs(); renderFeats(); }
-
-document.querySelectorAll('.toggle').forEach(el => el.onclick = () => el.classList.toggle('on'));
-
-function log(msg, type=''){
-  const term = $('term');
-  const div = document.createElement('div');
-  div.className = `log ${type}`;
-  div.textContent = `> ${msg}`;
-  term.appendChild(div);
-  term.scrollTop = term.scrollHeight;
-}
-
-// Preview Overlay Generator
-function generatePreview(){
-  const canvas = $('previewCanvas');
-  canvas.innerHTML = '';
-  $('previewGameName').textContent = DATA[curGame].name.toUpperCase();
-  
-  const feats = [];
-  Object.values(sel[curGame]).forEach(a => feats.push(...a));
-  
-  // Generate ESP boxes based on selected features
-  if(feats.includes('esp') || feats.includes('player_esp') || feats.includes('glow') || feats.includes('glow_esp')){
-    const enemies = [
-      {x: 200, y: 150, w: 60, h: 140, name: 'Enemy_1', health: 87},
-      {x: 450, y: 200, w: 55, h: 130, name: 'Player2', health: 64},
-      {x: 700, y: 180, w: 58, h: 135, name: 'Target_X', health: 92},
-      {x: 950, y: 220, w: 52, h: 125, name: 'NoobSlayer', health: 45}
-    ];
-    
-    enemies.forEach((enemy, i) => {
-      if(feats.includes('esp') || feats.includes('player_esp')){
-        // ESP Box
-        const box = document.createElement('div');
-        box.className = 'esp-box';
-        box.style.left = enemy.x + 'px';
-        box.style.top = enemy.y + 'px';
-        box.style.width = enemy.w + 'px';
-        box.style.height = enemy.h + 'px';
-        canvas.appendChild(box);
-        
-        // Name
-        const name = document.createElement('div');
-        name.className = 'esp-name';
-        name.textContent = enemy.name;
-        name.style.left = (enemy.x + enemy.w/2) + 'px';
-        name.style.top = (enemy.y - 5) + 'px';
-        canvas.appendChild(name);
-        
-        // Health bar
-        const health = document.createElement('div');
-        health.className = 'esp-health';
-        health.innerHTML = `<div class="esp-health-bar" style="width:${enemy.health}%"></div>`;
-        health.style.left = enemy.x + 'px';
-        health.style.top = (enemy.y + enemy.h + 8) + 'px';
-        canvas.appendChild(health);
-      }
-      
-      if(feats.includes('glow') || feats.includes('glow_esp')){
-        // Glow effect
-        const glow = document.createElement('div');
-        glow.className = 'glow-entity';
-        glow.style.left = (enemy.x - 10) + 'px';
-        glow.style.top = (enemy.y - 10) + 'px';
-        glow.style.width = (enemy.w + 20) + 'px';
-        glow.style.height = (enemy.h + 20) + 'px';
-        glow.style.background = 'radial-gradient(circle, rgba(0,240,255,0.4) 0%, transparent 70%)';
-        canvas.appendChild(glow);
-      }
-    });
-  }
-  
-  // Tracers
-  if(feats.includes('tracers')){
-    const centerX = canvas.offsetWidth / 2;
-    const tracers = [
-      {x: 230, y: 220},
-      {x: 478, y: 265},
-      {x: 729, y: 247}
-    ];
-    tracers.forEach(t => {
-      const tracer = document.createElement('div');
-      tracer.className = 'tracer';
-      tracer.style.left = (centerX - 1) + 'px';
-      tracer.style.top = '0px';
-      tracer.style.height = Math.sqrt(Math.pow(t.x - centerX, 2) + Math.pow(t.y, 2)) + 'px';
-      tracer.style.transform = `rotate(${Math.atan2(t.y, t.x - centerX)}rad)`;
-      tracer.style.transformOrigin = 'top center';
-      canvas.appendChild(tracer);
-    });
-  }
-  
-  // Crosshair
-  if(feats.includes('crosshair') || feats.includes('aimbot') || feats.includes('silent_aim')){
-    const crosshair = document.createElement('div');
-    crosshair.style.position = 'absolute';
-    crosshair.style.left = '50%';
-    crosshair.style.top = '50%';
-    crosshair.style.transform = 'translate(-50%, -50%)';
-    crosshair.style.width = '20px';
-    crosshair.style.height = '20px';
-    crosshair.style.border = '2px solid var(--accent)';
-    crosshair.style.borderRadius = '50%';
-    crosshair.style.boxShadow = '0 0 10px var(--glow)';
-    canvas.appendChild(crosshair);
-    
-    const dot = document.createElement('div');
-    dot.style.position = 'absolute';
-    dot.style.left = '50%';
-    dot.style.top = '50%';
-    dot.style.transform = 'translate(-50%, -50%)';
-    dot.style.width = '4px';
-    dot.style.height = '4px';
-    dot.style.background = 'var(--accent)';
-    dot.style.borderRadius = '50%';
-    canvas.appendChild(dot);
-  }
-}
-
-// Preview controls
-$('preview').onclick = () => {
-  $('previewOverlay').classList.add('show');
-  generatePreview();
-};
-
-$('closePreview').onclick = () => {
-  $('previewOverlay').classList.remove('show');
-};
-
-async function buildExe(config) {
-  const mz = [0x4D,0x5A,0x90,0x00,0x03,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,
-              0xB8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-              0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-              0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0x80,0x00,0x00,0x00];
-  const peSig = [0x50,0x45,0x00,0x00];
-  const coff = [0x64,0x86, 0x01,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0xE0,0x00, 0x2F,0x01];
-  const stubMsg = new TextEncoder().encode('CheatForge v2.0 runtime stub\r\n$');
-  const padLen = 512 - (mz.length + peSig.length + coff.length + stubMsg.length);
-  const pad = new Uint8Array(padLen > 0 ? padLen : 0);
-  
-  const cfgJson = new TextEncoder().encode(JSON.stringify(config, null, 2));
-  const marker = new TextEncoder().encode('\x00\x00CF_CFG_V2\x00\x00');
-  
-  const totalLen = mz.length + peSig.length + coff.length + stubMsg.length + pad.length + marker.length + cfgJson.length;
-  const result = new Uint8Array(totalLen);
-  let offset = 0;
-  
-  const copy = (arr) => { result.set(arr, offset); offset += arr.length; };
-  copy(mz); copy(peSig); copy(coff); copy(stubMsg); copy(pad); copy(marker); copy(cfgJson);
-  return result;
-}
-
-function randomHex(len) {
-  const bytes = new Uint8Array(len);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-$('build').onclick = async () => {
-  const feats = [];
-  Object.values(sel[curGame]).forEach(a => feats.push(...a));
-  if(!feats.length) { $('term').classList.add('show'); log('error: no features selected', 'err'); return; }
-  
-  const btn = $('build'), term = $('term');
-  btn.disabled = true; term.innerHTML = ''; term.classList.add('show');
-  
-  const steps = [
-    'initializing build environment...',
-    `resolving memory offsets for ${curGame.toUpperCase()}...`,
-    'allocating virtual memory space...',
-    'injecting feature modules: ' + feats.slice(0,3).join(', ') + (feats.length>3?' +'+(feats.length-3):'') + '...',
-    'embedding configuration payload...',
-    'stripping debug symbols and applying packer...',
-    'finalizing PE headers...'
-  ];
-  
-  for(let i=0; i<steps.length; i++){
-    log(steps[i]);
-    await new Promise(r => setTimeout(r, 150 + Math.random()*200));
-  }
-  
-  const config = {
-    buildId: randomHex(8),
-    game: curGame,
-    features: feats,
-    window: { opacity: +$('opacity').value, theme: $('theme').value, hotkey: $('hotkey').value },
-    bypass: $('bypass').classList.contains('on'),
-    stream: $('stream').classList.contains('on'),
-    timestamp: Date.now()
-  };
-  
-  const exeBytes = await buildExe(config);
-  const blob = new Blob([exeBytes], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `CheatForge_${curGame}_${config.buildId}.exe`;
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  log('build successful. payload delivered.', 'ok');
-  btn.disabled = false;
-};
-
-$('saveCfg').onclick = () => {
-  const cfg = { curGame, curCat, sel, window: {opacity:$('opacity').value, theme:$('theme').value, hotkey:$('hotkey').value}, bypass:$('bypass').classList.contains('on'), stream:$('stream').classList.contains('on') };
-  const blob = new Blob([JSON.stringify(cfg, null, 2)], {type: 'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `cheatforge_config_${randomHex(4)}.json`; a.click();
-};
-
-$('loadCfg').onclick = () => {
-  const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
-  input.onchange = e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const cfg = JSON.parse(ev.target.result);
-        curGame = cfg.curGame; curCat = cfg.curCat; sel = cfg.sel;
-        $('opacity').value = cfg.window.opacity; $('theme').value = cfg.window.theme; $('hotkey').value = cfg.window.hotkey;
-        if(cfg.bypass) $('bypass').classList.add('on'); else $('bypass').classList.remove('on');
-        if(cfg.stream) $('stream').classList.add('on'); else $('stream').classList.remove('on');
-        render();
-        log('configuration loaded successfully', 'ok');
-      } catch(err) { log('error: invalid config file', 'err'); }
-    };
-    reader.readAsText(file);
-  };
-  input.click();
-};
-
+const DATA={cs2:{name:'Counter-Strike 2',sub:'Source 2',icon:'CS2',combat:[['aimbot','Silent aim with FOV smoothing'],['triggerbot','Auto-fire on crosshair'],['rcs','Recoil control system'],['resolver','Anti-aim resolver'],['autowall','Penetration damage']],movement:[['bhop','Auto-hop with strafe sync'],['autostrafe','Air strafing assist'],['fastduck','Instant duck cancel'],['edgebug','Perfect landing detection']],visual:[['esp','Box + skeleton + health'],['chams','Material override'],['glow','Entity outline'],['world','Nightmode skybox']],misc:[['radar','Full map radar'],['skinchanger','Knife/glove override'],['nametag','Clan tag animator'],['autoaccept','Auto matchmaking']]},valorant:{name:'Valorant',sub:'Vanguard',icon:'VL',combat:[['aimbot','Bone-targeted aim'],['triggerbot','Auto-fire hitbox'],['silent_aim','Bullet redirection'],['no_recoil','Perfect spray']],movement:[['autostrafe','Air optimization'],['edgebug','Fall prevention'],['bunnyhop','Rhythmic jump']],visual:[['esp','Player boxes agent icons'],['glow','Chams through smoke'],['item_esp','Weapon highlight']],misc:[['radar','2D minimap dots'],['autoaccept','Instant queue'],['stream_proof','OBS hiding']]},rust:{name:'Rust',sub:'EAC',icon:'RS',combat:[['silent_aim','Bullet teleport'],['triggerbot','Instant fire'],['recoil_script','Perfect pattern'],['autofire','Hold-to-shoot']],movement:[['always_day','Time override'],['admin_flag','Fake admin'],['no_fall','Fall cancellation'],['speedhack','Movement multiplier']],visual:[['player_esp','Name health distance'],['ore_esp','Sulfur metal stone'],['stash_esp','Loot detection']],misc:[['autofarm','Resource automation'],['chat_spam','Message broadcaster'],['fakelag','Packet manipulation']]},apex:{name:'Apex Legends',sub:'EAC BR',icon:'AP',combat:[['aim_assist','Enhanced magnetism'],['glow_esp','Universal highlight'],['no_recoil','Weapon kick removal'],['prediction','Bullet compensation']],movement:[['tapstrafe','Instant direction'],['superglide','Wall-jump momentum'],['wall_jump','Enhanced climb']],visual:[['item_esp','Loot tier filter'],['loot_beam','Vertical beam'],['skeleton','Bone tracking']],misc:[['fps_unlock','Remove cap'],['fake_lag','Desync servers'],['quick_exit','Lobby drop']]},gta5:{name:'GTA V',sub:'Online/Story',icon:'G5',combat:[['godmode','Infinite health'],['infinite_ammo','No reload'],['explosive_melee','Area damage'],['one_shot','Instant kill']],movement:[['super_jump','Enhanced leap'],['fast_run','Sprint multiplier'],['noclip','Free movement'],['teleport','Coordinate jump']],visual:[['vehicle_esp','Car model plate'],['money_drop','Cash effect'],['custom_skins','Model override']],misc:[['recovery','RP money injection'],['troll','Vehicle spawn'],['auto_heist','Mission automation']]},minecraft:{name:'Minecraft',sub:'Java',icon:'MC',combat:[['killaura','Auto-attack CPS'],['reach','Extended hitbox'],['autopot','Splash potions'],['crits','Auto critical hits']],movement:[['fly','Creative flight'],['speed','Sprint multiplier'],['nofall','Fall cancellation'],['step','Auto-climb']],visual:[['xray','Ore highlight'],['esp','Entity tracking'],['chams','Model color'],['tracers','Lines to target']],misc:[['autotool','Best tool switch'],['freecam','Detach camera'],['cheststealer','Auto-loot'],['scaffold','Auto-place blocks']]},tf2:{name:'Team Fortress 2',sub:'Source',icon:'TF2',combat:[['aimbot','Hitscan prediction'],['triggerbot','Class-aware delay'],['backstab','Auto-backstab'],['ubercharge','Auto-deploy']],movement:[['speedhack','Tickrate boost'],['bhop','Hop assist'],['rocketjump','Angle optimization'],['airstrafe','Mid-air control']],visual:[['esp','Player boxes icons'],['glow','Outline geometry'],['bullettracers','Hit registration'],['remove_smoke','Particle culling']],misc:[['anti-backstab','Spy alert'],['namesteal','Rotate name'],['medic-alert','Low health ping'],['auto-capture','Point automation']]}};
+let curGame='cs2',curCat='combat',sel={};Object.keys(DATA).forEach(g=>sel[g]={});
+const $=id=>document.getElementById(id);
+function renderGames(){$('games').innerHTML=Object.entries(DATA).map(([k,v])=>`<div class="game ${k===curGame?'active':''}" data-g="${k}"><div class="game-icon">${v.icon}</div><div class="game-info"><div class="game-name">${v.name}</div><div class="game-sub">${v.sub}</div></div></div>`).join('');document.querySelectorAll('.game').forEach(el=>el.onclick=()=>{curGame=el.dataset.g;curCat='combat';render()})}
+function renderTabs(){const cats=Object.keys(DATA[curGame]);$('tabs').innerHTML=cats.map(c=>`<div class="tab ${c===curCat?'active':''}" data-c="${c}">${c}</div>`).join('');document.querySelectorAll('.tab').forEach(el=>el.onclick=()=>{curCat=el.dataset.c;render()})}
+function renderFeats(){const feats=DATA[curGame][curCat];const on=sel[curGame][curCat]||[];$('features').innerHTML=feats.map(([n,d])=>{const isOn=on.includes(n);return `<div class="feat ${isOn?'on':''}" data-n="${n}"><div class="chk"></div><div><div class="feat-name">${n}<span class="count">${isOn?'ON':'OFF'}</span></div><div class="feat-desc">${d}</div></div></div>`}).join('');document.querySelectorAll('.feat').forEach(el=>el.onclick=()=>{const n=el.dataset.n;if(!sel[curGame][curCat])sel[curGame][curCat]=[];const arr=sel[curGame][curCat];const i=arr.indexOf(n);if(i>=0)arr.splice(i,1);else arr.push(n);renderFeats()})}
+function render(){renderGames();renderTabs();renderFeats()}
+document.querySelectorAll('.toggle').forEach(el=>el.onclick=()=>el.classList.toggle('on'));
+function log(msg,type=''){$('term').classList.add('show');const div=document.createElement('div');div.className=`log ${type}`;div.textContent=`> ${msg}`;$('term').appendChild(div);$('term').scrollTop=$('term').scrollHeight}
+function generatePreview(){const canvas=$('previewCanvas');canvas.innerHTML='';$('previewGameName').textContent=DATA[curGame].name.toUpperCase();const feats=[];Object.values(sel[curGame]).forEach(a=>feats.push(...a));if(feats.includes('esp')||feats.includes('player_esp')||feats.includes('glow')||feats.includes('glow_esp')){const enemies=[{x:200,y:150,w:60,h:140,name:'Enemy_1',health:87},{x:450,y:200,w:55,h:130,name:'Player2',health:64},{x:700,y:180,w:58,h:135,name:'Target_X',health:92},{x:950,y:220,w:52,h:125,name:'NoobSlayer',health:45}];enemies.forEach((enemy,i)=>{if(feats.includes('esp')||feats.includes('player_esp')){const box=document.createElement('div');box.className='esp-box';box.style.left=enemy.x+'px';box.style.top=enemy.y+'px';box.style.width=enemy.w+'px';box.style.height=enemy.h+'px';canvas.appendChild(box);const name=document.createElement('div');name.className='esp-name';name.textContent=enemy.name;name.style.left=(enemy.x+enemy.w/2)+'px';name.style.top=(enemy.y-5)+'px';canvas.appendChild(name);const health=document.createElement('div');health.className='esp-health';health.innerHTML=`<div class="esp-health-bar" style="width:${enemy.health}%"></div>`;health.style.left=enemy.x+'px';health.style.top=(enemy.y+enemy.h+8)+'px';canvas.appendChild(health)}})}if(feats.includes('aimbot')||feats.includes('silent_aim')){const crosshair=document.createElement('div');crosshair.className='crosshair';canvas.appendChild(crosshair);const fov=document.createElement('div');fov.className='fov-circle';fov.style.width='150px';fov.style.height='150px';canvas.appendChild(fov)}}
+$('preview').onclick=()=>{$('previewOverlay').classList.add('show');generatePreview()};$('closePreview').onclick=()=>{$('previewOverlay').classList.remove('show')};
+async function buildExe(config){const mz=[0x4D,0x5A,0x90,0x00,0x03,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0xB8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x80,0x00,0x00,0x00];const peSig=[0x50,0x45,0x00,0x00];const coff=[0x64,0x86,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xE0,0x00,0x2F,0x01];const stubMsg=new TextEncoder().encode('CheatForge v3.0 runtime stub\r\n$');const padLen=512-(mz.length+peSig.length+coff.length+stubMsg.length);const pad=new Uint8Array(padLen>0?padLen:0);const cfgJson=new TextEncoder().encode(JSON.stringify(config,null,2));const marker=new TextEncoder().encode('\x00\x00CF_CFG_V3\x00\x00');const totalLen=mz.length+peSig.length+coff.length+stubMsg.length+pad.length+marker.length+cfgJson.length;const result=new Uint8Array(totalLen);let offset=0;const copy=(arr)=>{result.set(arr,offset);offset+=arr.length};copy(mz);copy(peSig);copy(coff);copy(stubMsg);copy(pad);copy(marker);copy(cfgJson);return result}
+function randomHex(len){const bytes=new Uint8Array(len);crypto.getRandomValues(bytes);return Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join('')}
+$('build').onclick=async()=>{const feats=[];Object.values(sel[curGame]).forEach(a=>feats.push(...a));if(!feats.length){log('error: no features selected','err');return}const btn=$('build'),term=$('term');btn.disabled=true;term.innerHTML='';term.classList.add('show');const steps=['initializing build environment...',`resolving memory offsets for ${curGame.toUpperCase()}...`,'allocating virtual memory space...','injecting feature modules: '+feats.slice(0,3).join(', ')+(feats.length>3?' +'+(feats.length-3):'')+'...','embedding configuration payload...','stripping debug symbols and applying packer...','finalizing PE headers...'];for(let i=0;i<steps.length;i++){log(steps[i]);await new Promise(r=>setTimeout(r,150+Math.random()*200))}const config={buildId:randomHex(8),game:curGame,features:feats,window:{opacity:+$('opacity').value,theme:$('theme').value,hotkey:$('hotkey').value},bypass:$('bypass').classList.contains('on'),stream:$('stream').classList.contains('on'),persistence:$('persistence').classList.contains('on'),timestamp:Date.now()};const exeBytes=await buildExe(config);const blob=new Blob([exeBytes],{type:'application/octet-stream'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`CheatForge_${curGame}_${config.buildId}.exe`;a.click();URL.revokeObjectURL(url);log('build successful. payload delivered.','ok');btn.disabled=false};
+$('saveCfg').onclick=()=>{const cfg={curGame,curCat,sel,window:{opacity:$('opacity').value,theme:$('theme').value,hotkey:$('hotkey').value},bypass:$('bypass').classList.contains('on'),stream:$('stream').classList.contains('on'),persistence:$('persistence').classList.contains('on')};const blob=new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`cheatforge_config_${randomHex(4)}.json`;a.click()};
+$('loadCfg').onclick=()=>{const input=document.createElement('input');input.type='file';input.accept='.json';input.onchange=e=>{const file=e.target.files[0];const reader=new FileReader();reader.onload=ev=>{try{const cfg=JSON.parse(ev.target.result);curGame=cfg.curGame;curCat=cfg.curCat;sel=cfg.sel;$('opacity').value=cfg.window.opacity;$('theme').value=cfg.window.theme;$('hotkey').value=cfg.window.hotkey;if(cfg.bypass)$('bypass').classList.add('on');else $('bypass').classList.remove('on');if(cfg.stream)$('stream').classList.add('on');else $('stream').classList.remove('on');if(cfg.persistence)$('persistence').classList.add('on');else $('persistence').classList.remove('on');render();log('configuration loaded successfully','ok')}catch(err){log('error: invalid config file','err')}};reader.readAsText(file)};input.click()};
 render();
 </script>
 </body>
