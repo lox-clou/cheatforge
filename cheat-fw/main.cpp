@@ -231,6 +231,110 @@ static void menuClick(int x,int y){
   yy+=30;}
 }
 
+
+// ===== CheatForge GUI menu (separate real topmost window) =====
+static bool g_menuOpen=true;
+static int g_activeTab=0;
+static HWND g_menu=0;
+static const int MENU_X=60,MENU_Y=60,MENU_W=440,MENU_H=560;
+struct Feat{const char*id;const char*name;int tab;};
+static std::vector<Feat> g_feats;
+static const char* TABN[]={"AIM","VISUAL","MOVE","MISC"};
+#ifdef GAME_CS2
+static void initFeats(){g_feats={
+ {"m_aim","Aimbot",0},{"m_head","Head bias",0},{"m_smooth","Smooth",0},{"m_fov","FOV limit",0},{"m_trig","Triggerbot",0},{"m_rcs","Recoil ctrl",0},
+ {"m_esp","ESP boxes",1},{"m_hp","Health bars",1},{"m_dist","Distance",1},{"m_radar","World radar",1},{"d_fovc","FOV circle",1},{"d_cross","Crosshair",1},{"d_trac","Tracers",1},
+ {"m_bhop","Bunny hop",2},{"m_strafe","Auto strafe",2},
+ {"m_noflash","No flash",3},{"i_rapid","Rapid fire",3},{"d_water","Watermark",3},{"d_fps","FPS meter",3},{"d_timer","Timer",3}};}
+#elif defined(GAME_VALORANT)
+static void initFeats(){g_feats={
+ {"c_aim","Aimbot",0},{"c_head","Head bias",0},{"c_smooth","Smooth",0},{"c_trig","Triggerbot",0},{"i_rec","Recoil",0},
+ {"c_esp","ESP",1},{"c_radar","Radar",1},{"d_fovc","FOV circle",1},{"d_cross","Crosshair",1},
+ {"i_rapid","Rapid fire",3},{"d_water","Watermark",3},{"d_fps","FPS meter",3}};}
+#elif defined(GAME_RUST)
+static void initFeats(){g_feats={
+ {"i_rec","Recoil AK",0},{"i_rak","AK pattern",0},{"i_rm4","M4 pattern",0},{"i_rapid","Rapid fire",0},
+ {"c_ore","Ore ESP",1},{"d_cross","Crosshair",1},{"d_water","Watermark",1},
+ {"i_bhop","Bhop",2},{"i_strafe","Strafe",2},
+ {"d_fps","FPS meter",3}};}
+#elif defined(GAME_APEX)
+static void initFeats(){g_feats={
+ {"c_aim","Aimbot",0},{"c_head","Head bias",0},{"c_trig","Triggerbot",0},{"i_rec","Recoil",0},
+ {"c_esp","ESP glow",1},{"c_radar","Radar",1},{"d_cross","Crosshair",1},
+ {"i_bhop","Bhop",2},
+ {"d_water","Watermark",3},{"d_fps","FPS meter",3}};}
+#elif defined(GAME_PUBG)
+static void initFeats(){g_feats={
+ {"c_aim","Aimbot",0},{"i_rec","Recoil M416",0},{"i_rak","AKM pattern",0},{"c_trig","Triggerbot",0},
+ {"c_esp","ESP",1},{"c_radar","Radar",1},{"d_cross","Crosshair",1},
+ {"i_rapid","Rapid fire",3},{"d_water","Watermark",3}};}
+#elif defined(GAME_FORTNITE)
+static void initFeats(){g_feats={
+ {"i_rec","Recoil AR",0},{"i_rak","AR pattern",0},{"i_rm4","SMG pattern",0},{"i_rapid","Rapid fire",0},
+ {"d_cross","Crosshair",1},{"d_water","Watermark",1},
+ {"i_bhop","Bhop",2},{"i_strafe","Strafe",2},
+ {"d_fps","FPS meter",3}};}
+#elif defined(GAME_GTA5)
+static void initFeats(){g_feats={
+ {"i_rec","Recoil",0},{"i_rapid","Rapid fire",0},{"i_aimkey","Aim spam",0},
+ {"d_cross","Crosshair",1},{"d_water","Watermark",1},
+ {"i_bhop","Jump spam",2},
+ {"d_fps","FPS meter",3}};}
+#elif defined(GAME_MINECRAFT)
+static void initFeats(){g_feats={
+ {"c_aim","Aimbot",0},{"c_trig","Triggerbot",0},{"i_rapid","CPS boost",0},
+ {"c_esp","Nametag ESP",1},{"c_ore","Ore ESP",1},{"c_radar","Radar",1},
+ {"i_bhop","Bhop",2},
+ {"d_water","Watermark",3},{"d_fps","FPS meter",3}};}
+#elif defined(GAME_TF2)
+static void initFeats(){g_feats={
+ {"c_aim","Aimbot",0},{"i_rec","Recoil",0},{"c_trig","Triggerbot",0},
+ {"c_esp","ESP red team",1},{"c_radar","Radar",1},{"d_cross","Crosshair",1},
+ {"i_bhop","Bhop",2},
+ {"d_water","Watermark",3}};}
+#else
+static void initFeats(){}
+#endif
+static void drawMenuTo(HDC dc){
+ HBRUSH pb=CreateSolidBrush(RGB(16,18,26));RECT pr={0,0,MENU_W,MENU_H};FillRect(dc,&pr,pb);DeleteObject(pb);
+ HPEN bo=CreatePen(PS_SOLID,2,RGB(0,240,255));HGDIOBJ op=SelectObject(dc,bo);HGDIOBJ ob=SelectObject(dc,GetStockObject(NULL_BRUSH));Rectangle(dc,0,0,MENU_W,MENU_H);SelectObject(dc,op);SelectObject(dc,ob);DeleteObject(bo);
+ SetBkMode(dc,TRANSPARENT);
+ SetTextColor(dc,RGB(0,240,255));TextOutA(dc,16,10,"CHEATFORGE",10);
+ SetTextColor(dc,RGB(110,116,140));TextOutA(dc,150,12,"INSERT close | END exit",22);
+ int tw=MENU_W/4;
+ for(int t=0;t<4;t++){RECT tr={t*tw,34,(t+1)*tw,62};
+  HBRUSH tb=CreateSolidBrush(t==g_activeTab?RGB(0,240,255):RGB(28,32,44));FillRect(dc,&tr,tb);DeleteObject(tb);
+  SetTextColor(dc,t==g_activeTab?RGB(0,0,0):RGB(160,166,190));TextOutA(dc,tr.left+16,tr.top+8,TABN[t],(int)strlen(TABN[t]));}
+ int y=74;
+ for(auto&f:g_feats){if(f.tab!=g_activeTab)continue;
+  bool isOn=on(f.id);
+  RECT cb={16,y+6,32,y+22};
+  HBRUSH cb_b=CreateSolidBrush(isOn?RGB(0,255,136):RGB(40,44,58));FillRect(dc,&cb,cb_b);DeleteObject(cb_b);
+  HPEN cbp=CreatePen(PS_SOLID,1,RGB(90,96,120));HGDIOBJ cp=SelectObject(dc,cbp);HGDIOBJ cb2=SelectObject(dc,GetStockObject(NULL_BRUSH));Rectangle(dc,cb.left,cb.top,cb.right,cb.bottom);SelectObject(dc,cp);SelectObject(dc,cb2);DeleteObject(cbp);
+  SetTextColor(dc,isOn?RGB(230,235,245):RGB(120,126,150));TextOutA(dc,42,y+8,f.name,(int)strlen(f.name));
+  y+=30;
+  if(y>MENU_H-20)break;}
+}
+static void menuClick(int x,int y){
+ if(y>=34&&y<62){int tw=MENU_W/4;int t=x/tw;if(t>=0&&t<4){g_activeTab=t;InvalidateRect(g_menu,0,FALSE);}return;}
+ int yy=74;
+ for(auto&f:g_feats){if(f.tab!=g_activeTab)continue;
+  if(y>=yy&&y<yy+30){toggleTok(f.id);InvalidateRect(g_menu,0,FALSE);return;}
+  yy+=30;}
+}
+static LRESULT CALLBACK MenuProc(HWND h,UINT m,WPARAM w,LPARAM l){
+ if(m==WM_PAINT){PAINTSTRUCT ps;HDC dc=BeginPaint(h,&ps);drawMenuTo(dc);EndPaint(h,&ps);return 0;}
+ if(m==WM_ERASEBKGND)return 1;
+ if(m==WM_LBUTTONDOWN){menuClick((short)LOWORD(l),(short)HIWORD(l));return 0;}
+ return DefWindowProcA(h,m,w,l);
+}
+static void setMenuVisible(bool v){if(!g_menu)return;ShowWindow(g_menu,v?SW_SHOW:SW_HIDE);if(v)SetForegroundWindow(g_menu);}
+static void createMenuWindow(){
+ WNDCLASSA wc={};wc.lpfnWndProc=MenuProc;wc.hInstance=GetModuleHandleA(0);wc.lpszClassName="CheatForgeMenu";wc.hbrBackground=0;
+ RegisterClassA(&wc);
+ g_menu=CreateWindowExA(WS_EX_TOPMOST|WS_EX_TOOLWINDOW,"CheatForgeMenu","",WS_POPUP,MENU_X,MENU_Y,MENU_W,MENU_H,0,0,wc.hInstance,0);
+}
+
 static LRESULT CALLBACK OvProc(HWND h,UINT m,WPARAM w,LPARAM l){
  if(m==WM_LBUTTONDOWN&&g_menuOpen){menuClick((short)LOWORD(l),(short)HIWORD(l));InvalidateRect(h,0,FALSE);return 0;}
  if(m==WM_PAINT){PAINTSTRUCT ps;HDC dc=BeginPaint(h,&ps);RECT r;GetClientRect(h,&r);
@@ -284,6 +388,7 @@ int main(int argc,char**argv){
  bool keepConsole=false;
  for(int i=1;i<argc;i++){if(!strcmp(argv[i],"-etw"))patchETW();else if(!strcmp(argv[i],"-ghost"))ghost();else if(!strcmp(argv[i],"-console"))keepConsole=true;}
  initNt();
+ initFeats();createMenuWindow();setMenuVisible(true);FreeConsole();
  char ttl[24];sprintf(ttl,"cfg-%d",jit(1000,9999));SetConsoleTitleA(ttl);
  g_sw=GetSystemMetrics(SM_CXSCREEN);g_sh=GetSystemMetrics(SM_CYSCREEN);
  InitializeCriticalSection(&g_cs);
@@ -322,6 +427,8 @@ int main(int argc,char**argv){
   if(GetAsyncKeyState(VK_F6)&1)toggleGroup("m_radar","c_radar");
   if(GetAsyncKeyState(VK_F7)&1)toggleGroup("d_water","d_fps");
   if(GetAsyncKeyState(VK_F8)&1)toggleGroup("d_fovc","d_cross");
+  static bool prevIns=false;bool ins=GetAsyncKeyState(VK_INSERT)&0x8000;
+  if(ins&&!prevIns){g_menuOpen=!g_menuOpen;setMenuVisible(g_menuOpen);}prevIns=ins;
   static bool prevIns=false;bool ins=GetAsyncKeyState(VK_INSERT)&0x8000;
   if(ins&&!prevIns){g_menuOpen=!g_menuOpen;setMenuStyle(g_menuOpen);}prevIns=ins;
   frames++;if(GetTickCount()-fpsT>1000){fps=frames;frames=0;fpsT=GetTickCount();}
