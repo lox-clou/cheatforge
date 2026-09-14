@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CheatForge // Foundry v9</title>
+<title>CheatForge // Foundry v10</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
@@ -15,6 +15,7 @@ body{background:var(--bg);color:var(--tx);font-family:ui-monospace,'Cascadia Mon
 .scan{position:fixed;left:0;right:0;height:200px;background:linear-gradient(180deg,transparent,rgba(0,240,255,.06),transparent);animation:scan 6s linear infinite;z-index:0;pointer-events:none}
 @keyframes scan{0%{top:-220px}100%{top:105vh}}
 .hidden{display:none!important}
+#boot{position:fixed;inset:0;background:#000;z-index:50;padding:40px;font-size:12px;color:var(--gr);white-space:pre-wrap;line-height:1.8}
 .logo{font-size:44px;font-weight:900;letter-spacing:-2px;color:#fff}
 .logo span{background:linear-gradient(90deg,var(--cy),var(--mg));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .logo:hover{animation:glitch .3s steps(2) 2}
@@ -32,7 +33,7 @@ body{background:var(--bg);color:var(--tx);font-family:ui-monospace,'Cascadia Mon
 .pcard ul{list-style:none;font-size:12px;color:#9aa3b8}.pcard li{padding:6px 0;border-bottom:1px dashed #171b28;display:flex;justify-content:space-between}
 .pcard li b{color:var(--cy)}.pcard.and li b{color:var(--gr)}
 .go{margin-top:20px;font-size:11px;letter-spacing:3px;color:var(--cy)}.pcard.and .go{color:var(--gr)}
-.gfoot{font-size:11px;color:var(--dim);display:flex;gap:10px;align-items:center}
+.gfoot{font-size:11px;color:var(--dim);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 header{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);background:rgba(4,5,10,.85);backdrop-filter:blur(12px);position:sticky;top:0;z-index:5}
 #back{background:none;border:1px solid var(--line);color:var(--dim);padding:7px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:1px}
 #back:hover{color:var(--cy);border-color:var(--cy)}
@@ -45,13 +46,19 @@ main{display:grid;grid-template-columns:280px 1fr 350px;gap:14px;padding:16px;ma
 .stage,.console{position:relative}.stage:before,.console:before{content:'';position:absolute;top:7px;right:7px;width:14px;height:14px;border-top:2px solid var(--mg);border-right:2px solid var(--mg);opacity:.7}
 h2{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:3px;margin-bottom:12px}
 #q{width:100%;background:#0a0d15;border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:8px 10px;font-family:inherit;font-size:11px;margin-bottom:10px;outline:none}#q:focus{border-color:var(--cy)}
-.game{padding:10px 12px;margin:5px 0;background:#0d1019;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.15s}
+.game{padding:10px 12px;margin:5px 0;background:#0d1019;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.15s;display:flex;gap:10px;align-items:center}
 .game:hover{border-color:#2c3550;transform:translateX(3px)}
 .game.active{border-color:var(--cy);background:rgba(0,240,255,.06);box-shadow:inset 3px 0 0 var(--cy)}
 .game.and.active{border-color:var(--gr);background:rgba(0,255,136,.06);box-shadow:inset 3px 0 0 var(--gr)}
-.game b{color:#fff;font-size:12px}.game small{display:block;color:var(--dim);font-size:9px;margin-top:2px}
+.emblem{width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#000;background:conic-gradient(from 45deg,var(--cy),var(--mg),var(--cy))}
+.game.and .emblem{background:conic-gradient(from 45deg,var(--gr),#00b3ff,var(--gr))}
+.game b{color:#fff;font-size:12px;display:block}.game small{display:block;color:var(--dim);font-size:9px;margin-top:2px}
 .badge{display:inline-block;font-size:8px;letter-spacing:1px;padding:2px 7px;border-radius:3px;margin-top:5px}
 .b-mem{background:rgba(0,240,255,.14);color:var(--cy)}.b-screen{background:rgba(189,0,255,.14);color:#d580ff}.b-input{background:rgba(0,255,136,.14);color:var(--gr)}.b-root{background:rgba(0,255,136,.14);color:var(--gr)}
+.grouph{font-size:9px;letter-spacing:2px;color:var(--dim);margin:14px 0 8px;text-transform:uppercase;border-left:3px solid var(--mg);padding-left:8px}
+.bulk{display:flex;gap:6px;margin-bottom:10px}
+.bulk button{flex:1;background:#0d1019;border:1px solid var(--line);color:var(--dim);font-family:inherit;font-size:9px;letter-spacing:1px;padding:6px;border-radius:5px;cursor:pointer}
+.bulk button:hover{color:var(--cy);border-color:var(--cy)}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:9px}
 .feat{padding:11px;background:#0d1019;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
 .feat:hover{border-color:#2c3550;transform:translateY(-2px)}
@@ -62,14 +69,17 @@ h2{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:3px;ma
 .rootnote{margin-top:12px;padding:10px;border:1px solid rgba(0,255,136,.3);border-radius:8px;background:rgba(0,255,136,.06);color:var(--gr);font-size:10px;line-height:1.6}
 .mech{margin-top:14px;font-size:10px;color:var(--dim);line-height:1.7;border-top:1px dashed #171b28;padding-top:10px}
 .cntrow{font-size:11px;color:var(--dim);margin-bottom:8px}.cntrow b{color:var(--cy);font-size:18px}
-#cfgprev{background:#000;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:9px;height:130px;overflow:auto;white-space:pre-wrap;margin-bottom:10px}
+#cfgprev{background:#000;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:9px;height:120px;overflow:auto;white-space:pre-wrap;margin-bottom:10px}
 #cfgprev i{color:#7ee787;font-style:normal}#cfgprev b{color:#ffab70;font-weight:400}#cfgprev u{color:var(--cy);text-decoration:none}
 #prog{height:3px;background:#11151f;border-radius:2px;overflow:hidden;margin-bottom:10px}#prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cy),var(--mg));transition:width .25s}
 .btn{width:100%;padding:15px;background:linear-gradient(90deg,var(--cy),var(--mg));border:0;border-radius:8px;color:#000;font-weight:800;font-size:11px;letter-spacing:3px;cursor:pointer;font-family:inherit;transition:.2s;box-shadow:0 10px 34px rgba(0,240,255,.28)}
 .btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 14px 44px rgba(0,240,255,.45)}.btn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 .btn.and{background:linear-gradient(90deg,var(--gr),#00b3ff)}
-.term{background:#000;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:10px;height:110px;overflow-y:auto;margin-top:10px;display:none}.term.show{display:block}.term .ok{color:var(--gr)}.term .err{color:var(--rd)}
+.term{background:#000;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:10px;height:100px;overflow-y:auto;margin-top:10px;display:none}.term.show{display:block}.term .ok{color:var(--gr)}.term .err{color:var(--rd)}
 .note{font-size:9px;color:#39405a;margin-top:10px;word-break:break-all}
+.recents{margin-top:12px}
+.recents div{font-size:10px;color:var(--dim);padding:5px 8px;border:1px dashed #171b28;border-radius:5px;margin:4px 0;cursor:pointer}
+.recents div:hover{color:var(--cy);border-color:var(--cy)}
 #toasts{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:8px;align-items:center}
 .toast{background:#0b0e15;border:1px solid var(--cy);padding:11px 24px;border-radius:8px;font-size:11px;box-shadow:0 12px 40px rgba(0,240,255,.2);animation:tin .25s}.toast.and{border-color:var(--gr)}
 @keyframes tin{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
@@ -77,29 +87,33 @@ h2{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:3px;ma
 </head>
 <body>
 <canvas id="cv"></canvas><div class="scan"></div>
-<div id="gate">
+<pre id="boot"></pre>
+<div id="gate" class="hidden">
  <div style="text-align:center"><div class="logo">CHEAT<span>FORGE</span></div><div class="sub">external cheat foundry · select platform</div></div>
  <div class="cards">
   <div class="pcard" data-p="win"><h3>WINDOWS</h3><div class="os">x86_64 · pe32+ · external</div>
-   <ul><li>live per-game binaries <b>9</b></li><li>features per title <b>25-30</b></li><li>tiers <b>mem / screen / input</b></li><li>pack <b>exe + config + readme</b></li></ul><div class="go">ENTER FOUNDRY →</div></div>
-  <div class="pcard and" data-p="and"><h3>ANDROID</h3><div class="os">arm64-v8a · root · ptrace inject</div>
-   <ul><li>mobile titles <b>5</b></li><li>payload <b>root injector binary</b></li><li>flow <b>root → inject → launch</b></li><li>standoff 2 <b>cs2 feature set</b></li></ul><div class="go">ENTER CATALOG →</div></div>
+   <ul><li>live per-game binaries <b>9</b></li><li>features per title <b>25-30</b></li><li>reads via <b>fresh-ntdll syscalls</b></li><li>pack <b>exe + config + readme</b></li></ul><div class="go">ENTER FOUNDRY →</div></div>
+  <div class="pcard and" data-p="and"><h3>ANDROID</h3><div class="os">arm64-v8a · root · ptrace-free</div>
+   <ul><li>mobile titles <b>5</b></li><li>payload <b>/proc/mem + scan/freeze</b></li><li>flow <b>root → inject → launch</b></li><li>standoff 2 <b>cs2 feature set</b></li></ul><div class="go">ENTER CATALOG →</div></div>
  </div>
- <div class="gfoot"><i id="gdot" style="width:8px;height:8px;border-radius:50%;background:#565e74;display:inline-block"></i><span id="gstat">probing builds…</span></div>
+ <div class="gfoot"><i id="gdot" style="width:8px;height:8px;border-radius:50%;background:#565e74;display:inline-block"></i><span id="gstat">win: probing…</span><i id="gdot2" style="width:8px;height:8px;border-radius:50%;background:#565e74;display:inline-block"></i><span id="gstat2">android: probing…</span></div>
 </div>
 <div id="app" class="hidden">
  <header><button id="back">‹ PLATFORM</button><div class="logo small">CHEAT<span>FORGE</span></div><div class="pill" id="platpill"></div><div class="dotwrap"><i id="dot"></i><span id="dottxt"></span></div></header>
  <main>
   <aside class="rail"><h2>games</h2><input id="q" placeholder="search title…"><div id="games"></div></aside>
   <section class="stage"><h2>compiled features · <span id="gcount"></span> <span class="badge" id="tierbadge"></span></h2>
+   <div class="bulk"><button id="ball">ALL</button><button id="bnone">NONE</button><button id="binv">INVERT</button></div>
    <div class="warn" id="warn">select at least one feature — build stays locked</div>
-   <div class="rootnote hidden" id="rootnote">⚡ ROOT REQUIRED · unpack zip on phone → run <b>inject.sh</b> as root (Termux: su → sh inject.sh) → attaches to the game via ptrace, applies features from config.json, then launches the game with cheats active.</div>
-   <div id="feats" class="fgrid"></div><div class="mech" id="mech"></div></section>
+   <div class="rootnote hidden" id="rootnote">⚡ ROOT REQUIRED · unpack zip on phone → Termux: su → sh inject.sh → attaches via /proc/mem (no ptrace, TracerPid=0), scans+freezes stats, launches the game.</div>
+   <div id="featswrap"></div><div class="mech" id="mech"></div></section>
   <aside class="console"><h2>build console</h2>
    <div class="cntrow">selected <b id="cnt">0</b> / <span id="tot">0</span></div>
    <pre id="cfgprev"></pre><div id="prog"><i></i></div>
    <button class="btn" id="build" disabled>SELECT FEATURES TO UNLOCK</button>
-   <div class="term" id="term"></div><div class="note" id="src"></div></aside>
+   <div class="term" id="term"></div>
+   <div class="recents" id="recents"></div>
+   <div class="note" id="src"></div></aside>
  </main>
 </div>
 <div id="toasts"></div>
@@ -107,7 +121,7 @@ h2{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:3px;ma
 const RAW="https://raw.githubusercontent.com/lox-clou/cheatforge/main/builds/";
 const D10="d_fovc|FOV circle d_cross|Crosshair d_hitm|Hitmarker d_water|Watermark d_grid|Grid overlay d_pulse|Pulse boxes d_corner|Corner boxes d_trac|Tracers d_timer|Session timer d_fps|FPS meter";
 const WIN={
-cs2:{n:"Counter-Strike 2",proc:"cs2.exe",tier:"mem",mech:"memory tier: RPM + view matrix W2S, offsets from cs2-dumper at compile time.",f:"m_esp|ESP boxes m_hp|HP bars m_dist|Distance tags m_radar|Radar dots m_noflash|No flash m_aim|Aimbot m_head|Head bias m_smooth|Aim smooth m_fov|FOV limit m_trig|Triggerbot m_tdly|Trig delay m_bhop|Bhop m_strafe|Auto strafe m_rcs|RCS m_rcsh|RCS half m_astop|Auto stop "+D10+" i_rapid|Rapid fire i_crouch|Fast duck i_burst|Burst clicker i_jump|Jump spam"},
+cs2:{n:"Counter-Strike 2",proc:"cs2.exe",tier:"mem",mech:"memory tier: fresh-ntdll syscall reads + view matrix W2S, offsets from cs2-dumper at compile time. -ghost/-etw flags for stealth.",f:"m_esp|ESP boxes m_hp|HP bars m_dist|Distance tags m_radar|World radar m_noflash|No flash m_aim|Aimbot m_head|Head bias m_smooth|Aim smooth m_fov|FOV limit m_trig|Triggerbot m_tdly|Trig delay m_bhop|Bhop m_strafe|Auto strafe m_rcs|RCS m_rcsh|RCS half m_astop|Auto stop "+D10+" i_rapid|Rapid fire i_crouch|Fast duck i_burst|Burst clicker i_jump|Jump spam"},
 valorant:{n:"Valorant",proc:"VALORANT-Win64-Shipping.exe",tier:"screen",mech:"screen+input tier: zero memory reads, enemy highlight color is target source.",f:"c_esp|Color ESP c_aim|Color aim c_head|Head bias c_smooth|Aim smooth c_fov|FOV limit c_trig|Triggerbot c_tdly|Trig delay c_radar|Screen radar "+D10+" i_rec|Recoil macro i_rech|Recoil half i_rapid|Rapid fire i_rslow|Slow fire i_burst|Burst clicker i_crouch|Crouch spam i_jump|Jump spam"},
 rust:{n:"Rust",proc:"RustClient.exe",tier:"input",mech:"input tier + ore color scanner: zero player-memory reads.",f:"c_ore|Ore ESP "+D10+" i_rec|Recoil macro i_rech|Recoil half i_rak|AK pattern i_rm4|M4 pattern i_rbolt|Bolt pattern i_rapid|Rapid fire i_rslow|Slow fire i_burst|Burst clicker i_bhop|Bhop i_strafe|Air strafe i_tap|Tap strafe i_crouch|Crouch spam i_lean|Lean spam i_prone|Prone spam i_jump|Jump spam i_walk|Walk hold"},
 apex:{n:"Apex Legends",proc:"r5apex.exe",tier:"screen",mech:"screen+input tier: enemy glow is target source, zero memory reads.",f:"c_esp|Color ESP c_aim|Color aim c_head|Head bias c_smooth|Aim smooth c_fov|FOV limit c_trig|Triggerbot c_tdly|Trig delay c_radar|Screen radar "+D10+" i_rec|Recoil macro i_rech|Recoil half i_tap|Tap strafe i_bhop|Bhop i_strafe|Air strafe i_rapid|Rapid fire i_burst|Burst clicker"},
@@ -118,30 +132,41 @@ minecraft:{n:"Minecraft",proc:"javaw.exe",tier:"screen",mech:"screen+input tier:
 tf2:{n:"Team Fortress 2",proc:"hl2.exe",tier:"screen",mech:"screen+input tier: red team color is target source.",f:"c_esp|Color ESP c_aim|Color aim c_head|Head bias c_smooth|Aim smooth c_fov|FOV limit c_trig|Triggerbot c_tdly|Trig delay c_radar|Screen radar "+D10+" i_rec|Recoil macro i_rech|Recoil half i_bhop|Bhop i_strafe|Air strafe i_tap|Tap strafe i_crouch|Crouch spam i_jump|Jump spam i_rapid|Rapid fire"}
 };
 const AND={
-standoff2:{n:"Standoff 2",proc:"com.axlebolt.standoff2",tier:"root",mech:"root injector: ptrace attach + /proc/mem write. CS2-equivalent feature set mapped to Standoff 2 il2cpp offsets.",f:"esp|ESP boxes aimbot|Aimbot triggerbot|Triggerbot bhop|Bhop rcs|No recoil radar|Radar noflash|No flash speed|Speed hack godmode|God mode norecoil|Recoil control headshot|Headshot only wallhack|Wallhack glow|Glow chams|Chams distance|Distance tags healthbar|Health bars fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker watermark|Watermark rapidfire|Rapid fire burst|Burst fire autostop|Auto stop prediction|Bullet prediction silentaim|Silent aim"},
-pubgm:{n:"PUBG Mobile",proc:"com.tencent.ig",tier:"root",mech:"root injector: ptrace + libil2cpp.so offsets.",f:"esp|ESP aimbot|Aimbot norecoil|No recoil speed|Speed hack godmode|God mode radar|Radar noflash|No flash magicbullet|Magic bullet distance|Distance healthbar|Health bars fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker rapidfire|Rapid fire autoloot|Auto loot"},
-freefire:{n:"Free Fire",proc:"com.dts.freefireth",tier:"root",mech:"root injector: ptrace + libil2cpp.so offsets.",f:"esp|ESP aimbot|Aimbot headshot|Headshot mode speed|Speed hack godmode|God mode radar|Radar antena|Antenna aim fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker rapidfire|Rapid fire autorevive|Auto revive"},
-codm:{n:"CoD Mobile",proc:"com.activision.callofduty.shooter",tier:"root",mech:"root injector: ptrace + libil2cpp.so offsets.",f:"esp|ESP aimbot|Aimbot norecoil|No recoil speed|Speed hack godmode|God mode radar|Radar fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker rapidfire|Rapid fire unlimitedammo|Unlimited ammo"},
-mcpe:{n:"Minecraft PE",proc:"com.mojang.minecraftpe",tier:"root",mech:"root injector: ptrace + libminecraftpe.so offsets.",f:"xray|Xray fly|Fly killaura|Kill aura speed|Speed hack godmode|God mode reach|Reach hitbox esp|Entity ESP radar|Radar fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker"}
+standoff2:{n:"Standoff 2",proc:"com.axlebolt.standoff2",tier:"root",mech:"root injector v2: ptrace-free /proc/mem + scan/freeze. CS2-equivalent feature set.",f:"esp|ESP boxes aimbot|Aimbot triggerbot|Triggerbot bhop|Bhop rcs|No recoil radar|Radar noflash|No flash speed|Speed hack godmode|God mode norecoil|Recoil control headshot|Headshot only wallhack|Wallhack glow|Glow chams|Chams distance|Distance tags healthbar|Health bars fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker watermark|Watermark rapidfire|Rapid fire burst|Burst fire autostop|Auto stop prediction|Bullet prediction silentaim|Silent aim"},
+pubgm:{n:"PUBG Mobile",proc:"com.tencent.ig",tier:"root",mech:"root injector v2: ptrace-free /proc/mem + scan/freeze.",f:"esp|ESP aimbot|Aimbot norecoil|No recoil speed|Speed hack godmode|God mode radar|Radar noflash|No flash magicbullet|Magic bullet distance|Distance healthbar|Health bars fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker rapidfire|Rapid fire autoloot|Auto loot"},
+freefire:{n:"Free Fire",proc:"com.dts.freefireth",tier:"root",mech:"root injector v2: ptrace-free /proc/mem + scan/freeze.",f:"esp|ESP aimbot|Aimbot headshot|Headshot mode speed|Speed hack godmode|God mode radar|Radar antena|Antenna aim fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker rapidfire|Rapid fire autorevive|Auto revive"},
+codm:{n:"CoD Mobile",proc:"com.activision.callofduty.shooter",tier:"root",mech:"root injector v2: ptrace-free /proc/mem + scan/freeze.",f:"esp|ESP aimbot|Aimbot norecoil|No recoil speed|Speed hack godmode|God mode radar|Radar fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker rapidfire|Rapid fire unlimitedammo|Unlimited ammo"},
+mcpe:{n:"Minecraft PE",proc:"com.mojang.minecraftpe",tier:"root",mech:"root injector v2: ptrace-free /proc/mem + scan/freeze.",f:"xray|Xray fly|Fly killaura|Kill aura speed|Speed hack godmode|God mode reach|Reach hitbox esp|Entity ESP radar|Radar fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker"}
 };
 let plat="win",cur="cs2",sel={};
 Object.keys(WIN).forEach(k=>sel[k]=new Set());Object.keys(AND).forEach(k=>sel[k]=new Set());
 const $=id=>document.getElementById(id);
 const T=()=>plat==="win"?WIN:AND;
 const parseF=v=>v.f.split(" ").map(s=>s.split("|"));
-function toast(m,and){const d=document.createElement("div");d.className="toast"+(and?" and":"");d.textContent=m;$("toasts").appendChild(d);setTimeout(()=>d.remove(),2600)}
-function probe(){fetch(RAW+"CheatForge_cs2.exe?ts="+Date.now(),{method:"HEAD"}).then(r=>{$("gdot").style.background=r.ok?"#00ff88":"#ff3860";$("gstat").textContent=r.ok?"builds: online":"builds: missing";$("dot").className=r.ok?"ok":"bad";$("dottxt").textContent=r.ok?"builds online":"builds missing"}).catch(()=>{$("dot").className="bad";$("dottxt").textContent="network error"})}
+const GROUPS={m:"memory read",c:"screen / color",i:"input / macros",d:"overlay draw",e:"root inject",a:"root inject",x:"root inject",g:"root inject",n:"root inject",r:"root inject",w:"root inject",h:"root inject",s:"root inject",p:"root inject",u:"root inject",b:"root inject",f:"root inject",t:"root inject"};
+function toast(m,and){const t=$("toasts");while(t.children.length>2)t.firstChild.remove();const d=document.createElement("div");d.className="toast"+(and?" and":"");d.textContent=m;t.appendChild(d);setTimeout(()=>d.remove(),2600)}
+function probe(){
+ fetch(RAW+"CheatForge_cs2.exe?ts="+Date.now(),{method:"HEAD"}).then(r=>{$("gdot").style.background=r.ok?"#00ff88":"#ff3860";$("gstat").textContent="win: "+(r.ok?"online":"missing");}).catch(()=>{$("gstat").textContent="win: net err"});
+ fetch(RAW+"cf_inject_standoff2?ts="+Date.now(),{method:"HEAD"}).then(r=>{$("gdot2").style.background=r.ok?"#00ff88":"#ff3860";$("gstat2").textContent="android: "+(r.ok?"online":"missing");$("dot").className=r.ok?"ok":"bad";$("dottxt").textContent="builds online";}).catch(()=>{$("gstat2").textContent="android: net err"});
+}
+function recents(){
+ let r=JSON.parse(localStorage.getItem("cf_rec")||"[]");
+ $("recents").innerHTML=r.length?"<h2>recent builds</h2>":"";
+ r.slice(0,5).forEach(x=>{const d=document.createElement("div");d.textContent="↺ "+x.p+" / "+x.g+" · "+x.n+" feats";d.onclick=()=>{plat=x.p;cur=x.g;$("gate").classList.add("hidden");$("app").classList.remove("hidden");R();toast("restored selection: "+x.g)};$("recents").appendChild(d)});
+}
+function pushRec(p,g,n){let r=JSON.parse(localStorage.getItem("cf_rec")||"[]");r=r.filter(x=>!(x.p===p&&x.g===g));r.unshift({p,g,n});localStorage.setItem("cf_rec",JSON.stringify(r.slice(0,6)));recents()}
 function R(){
  const G=T(),q=($("q").value||"").toLowerCase();
  $("platpill").textContent=plat==="win"?"windows · x86_64":"android · arm64";$("platpill").className="pill"+(plat==="and"?" and":"");
- $("games").innerHTML=Object.entries(G).filter(([k,v])=>v.n.toLowerCase().includes(q)).map(([k,v])=>`<div class="game ${plat==='and'?'and':''} ${k===cur?'active':''}" data-g="${k}"><b>${v.n}</b><small>${v.proc}</small><span class="badge b-${v.tier}">${v.tier==="mem"?"MEMORY":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT":"ROOT INJECT"}</span></div>`).join("");
+ $("games").innerHTML=Object.entries(G).filter(([k,v])=>v.n.toLowerCase().includes(q)).map(([k,v])=>`<div class="game ${plat==='and'?'and':''} ${k===cur?'active':''}" data-g="${k}"><div class="emblem">${v.n.split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase()}</div><div><b>${v.n}</b><small>${v.proc}</small><span class="badge b-${v.tier}">${v.tier==="mem"?"MEMORY":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT":"ROOT INJECT"}</span></div></div>`).join("");
  document.querySelectorAll(".game").forEach(e=>e.onclick=()=>{cur=e.dataset.g;R()});
  const v=G[cur],F=parseF(v);
  $("gcount").textContent=F.length+" features";
- $("tierbadge").className="badge b-"+v.tier;$("tierbadge").textContent=v.tier==="mem"?"MEMORY RPM/WPM":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT ONLY":"ROOT · ptrace /proc/mem";
+ $("tierbadge").className="badge b-"+v.tier;$("tierbadge").textContent=v.tier==="mem"?"MEMORY RPM/WPM":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT ONLY":"ROOT · /proc/mem";
  $("rootnote").className="rootnote"+(plat==="and"?"":" hidden");
- const ic=id=>id[0]==="m"?"◆":id[0]==="c"?"◈":id[0]==="i"?"⌨":plat==="and"?"⚡":"";
- $("feats").innerHTML=F.map(f=>`<div class="feat ${sel[cur].has(f[0])?'on':''} ${plat==='and'?'and':''}" data-n="${f[0]}"><b>${f[1]}</b><small>${f[0]}</small><span class="ic">${ic(f[0])}</span></div>`).join("");
+ const byG={};F.forEach(f=>{const g=plat==="and"?"root":(f[0][0]==="m"?"memory read":f[0][0]==="c"?"screen / color":f[0][0]==="i"?"input / macros":"overlay draw");(byG[g]=byG[g]||[]).push(f)});
+ const ic=id=>plat==="and"?"⚡":id[0]==="m"?"◆":id[0]==="c"?"◈":id[0]==="i"?"⌨":"✦";
+ $("featswrap").innerHTML=Object.entries(byG).map(([g,list])=>`<div class="grouph">${g} · ${list.length}</div><div class="fgrid">`+list.map(f=>`<div class="feat ${sel[cur].has(f[0])?'on':''} ${plat==='and'?'and':''}" data-n="${f[0]}"><b>${f[1]}</b><small>${f[0]}</small><span class="ic">${ic(f[0])}</span></div>`).join("")+`</div>`).join("");
  document.querySelectorAll(".feat").forEach(e=>e.onclick=()=>{const n=e.dataset.n;sel[cur].has(n)?sel[cur].delete(n):sel[cur].add(n);R()});
  $("mech").textContent=v.mech;
  const nsel=sel[cur].size;$("cnt").textContent=nsel;$("tot").textContent=F.length;
@@ -152,6 +177,9 @@ function R(){
  else{b.className="btn"+(isAnd?" and":"");b.disabled=false;b.textContent=isAnd?"DOWNLOAD ROOT INJECTOR (.zip)":"DOWNLOAD REAL CHEAT (.zip)";}
  $("src").textContent="source: "+RAW+bin;
 }
+$("ball").onclick=()=>{parseF(T()[cur]).forEach(f=>sel[cur].add(f[0]));R()};
+$("bnone").onclick=()=>{sel[cur].clear();R()};
+$("binv").onclick=()=>{parseF(T()[cur]).forEach(f=>sel[cur].has(f[0])?sel[cur].delete(f[0]):sel[cur].add(f[0]));R()};
 function log(m,t){const T2=$("term");T2.classList.add("show");const d=document.createElement("div");d.className=t||"";d.textContent="> "+m;T2.appendChild(d);T2.scrollTop=T2.scrollHeight}
 function prog(p){$("prog").firstElementChild.style.width=p+"%"}
 $("build").onclick=async()=>{
@@ -167,38 +195,40 @@ $("build").onclick=async()=>{
  if(isAnd){
   zip.file("cf_inject",blob);zip.file("config.json",JSON.stringify(cfg,null,2));
   zip.file("inject.sh",`#!/system/bin/sh
-# CheatForge root injector for ${v.n} (${v.proc})
-# usage: su -> sh inject.sh   (Termux or any root shell)
-BIN=$(dirname "$0")/cf_inject
-chmod 755 "$BIN" 2>/dev/null
-cp "$(dirname "$0")/config.json" /data/local/tmp/cf_config.json 2>/dev/null
+# CheatForge root injector v2 for ${v.n} (${v.proc}) — ptrace-free
+# usage: su -> sh inject.sh
+D=/data/local/tmp
+cp "$(dirname "$0")/cf_inject" $D/.logd_worker 2>/dev/null && chmod 755 $D/.logd_worker
+cp "$(dirname "$0")/config.json" $D/cf_config.json 2>/dev/null
 echo "[cf] injecting into ${v.proc} ... grant root when prompted"
-"$BIN" -inject ${v.proc}
+$D/.logd_worker -inject ${v.proc} &
+sleep 2
 echo "[cf] launching ${v.n} ..."
 am start -n ${v.proc}/.MainActivity 2>/dev/null || monkey -p ${v.proc} -c android.intent.category.LAUNCHER 1 2>/dev/null
-echo "[cf] done. cheats active in-game."
+echo "[cf] done. freeze loop running in background."
 `);
-  zip.file("README.txt",`CheatForge ROOT injector - ${v.n}
+  zip.file("README.txt",`CheatForge ROOT injector v2 - ${v.n}
 REQUIRES: rooted android (Magisk / KernelSU / su)
-1) unpack this zip on your phone
-2) Termux:  su  then  sh inject.sh
-3) grant root when prompted
-4) injector attaches to ${v.proc} via ptrace, applies features, launches the game
+1) unpack zip on phone
+2) Termux: su then sh inject.sh
+3) grant root; injector hides as /data/local/tmp/.logd_worker
+4) no ptrace attach: TracerPid stays 0; reads/writes via /proc/pid/mem
+5) scan/freeze loop keeps godmode stats pinned; game launches after inject
 features: ${feats.join(", ")}
-note: ptrace+/proc/mem needs root; some devices need SELinux permissive (setenforce 0 as root).
-anti-cheat may still detect - use alt accounts.
+some devices need: setenforce 0 (as root). anti-cheat may still detect - alt accounts.
 `);
  }else{
   zip.file(bin,blob);zip.file("config.json",JSON.stringify(cfg,null,2));
-  zip.file("README.txt",`CheatForge real build\ngame: ${v.n}\nprocess: ${v.proc}\ntier: ${v.tier}\nfeatures: ${feats.join(", ")}\n\n1) unpack ALL files into ONE folder\n2) start the game\n3) run ${bin} as administrator\n4) keep config.json next to it\n5) END = exit | verify: run with -selftest first\n\n${v.mech}\n`);
+  zip.file("README.txt",`CheatForge real build v5\ngame: ${v.n}\nprocess: ${v.proc}\ntier: ${v.tier}\nfeatures: ${feats.join(", ")}\n\n1) unpack ALL files into ONE folder\n2) start the game\n3) run: ${bin} -ghost -etw   (as administrator; flags = masquerade + ETW blind)\n4) keep config.json next to it\n5) END = exit | verify first: ${bin} -selftest\n\n${v.mech}\n`);
  }
  log("zipping "+(isAnd?"injector + inject.sh + config":"exe + config + readme")+"...");
  saveAs(await zip.generateAsync({type:"blob"}),(isAnd?"CF_RootInject_"+cur:"CheatForge_"+cur+"_real")+".zip");
- prog(100);log("done","ok");toast((isAnd?"root injector packed: ":"build packed: ")+cur+" · "+feats.length+" features",isAnd);
+ prog(100);log("done","ok");pushRec(plat,cur,feats.length);
+ toast((isAnd?"root injector packed: ":"build packed: ")+cur+" · "+feats.length+" features",isAnd);
  setTimeout(()=>prog(0),1200);b.disabled=false;R();
 };
 document.querySelectorAll(".pcard").forEach(c=>{
- c.onclick=()=>{plat=c.dataset.p;cur=plat==="win"?"cs2":"standoff2";$("gate").classList.add("hidden");$("app").classList.remove("hidden");R()};
+ c.onclick=()=>{plat=c.dataset.p;cur=plat==="win"?"cs2":"standoff2";$("gate").classList.add("hidden");$("app").classList.remove("hidden");R();recents()};
  c.onmousemove=e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform=`perspective(900px) rotateY(${x*7}deg) rotateX(${-y*7}deg) translateY(-6px)`};
  c.onmouseleave=()=>c.style.transform="";
 });
@@ -212,7 +242,13 @@ for(let i=0;i<64;i++)P.push([Math.random()*cv.width,Math.random()*cv.height,Math
  cx.strokeStyle="rgba(0,240,255,.05)";
  for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const dx=P[i][0]-P[j][0],dy=P[i][1]-P[j][1];if(dx*dx+dy*dy<9000){cx.beginPath();cx.moveTo(P[i][0],P[i][1]);cx.lineTo(P[j][0],P[j][1]);cx.stroke()}}
  requestAnimationFrame(loop)})();
-probe();
+// boot sequence
+const BOOT=["CHEATFORGE BIOS v10.0","mem check ............ ok","particle field ....... ok","probe win builds ..... ","probe android inj .... ","ui subsystem ......... ok","handshake ............ ready","",""];
+let bi=0,bb="";
+(function type(){
+ if(bi>=BOOT.length){$("boot").textContent=bb;setTimeout(()=>{$("boot").classList.add("hidden");$("gate").classList.remove("hidden");probe();},350);return}
+ bb+=BOOT[bi]+"\n";$("boot").textContent=bb;bi++;setTimeout(type,bi<3?120:260);
+})();
 </script>
 </body>
 </html>
