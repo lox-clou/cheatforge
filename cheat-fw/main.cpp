@@ -489,7 +489,7 @@ static LRESULT CALLBACK OvProc(HWND h,UINT m,WPARAM w,LPARAM l){
  return DefWindowProcA(h,m,w,l);}
 static DWORD WINAPI OvThread(LPVOID){WNDCLASSA wc={};wc.lpfnWndProc=OvProc;wc.hInstance=GetModuleHandleA(0);wc.lpszClassName="EdgeUiWindow";
  RegisterClassA(&wc);g_ov=CreateWindowExA(WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOPMOST|WS_EX_TOOLWINDOW,"EdgeUiWindow","",WS_POPUP|WS_VISIBLE,0,0,g_sw,g_sh,0,0,wc.hInstance,0);
- SetLayeredWindowAttributes(g_ov,RGB(255,0,255),0,LWA_COLORKEY);MSG msg;while(GetMessageA(&msg,0,0,0)){TranslateMessage(&msg);DispatchMessageA(&msg);}return 0;}
+ SetLayeredWindowAttributes(g_ov,RGB(255,0,255),0,LWA_COLORKEY);createMenuWindow();setMenuVisible(g_menuOpen);MSG msg;while(GetMessageA(&msg,0,0,0)){TranslateMessage(&msg);DispatchMessageA(&msg);}return 0;}
 static void moveMouse(float tx,float ty,float sm){POINT c;GetCursorPos(&c);float nx=c.x+(tx-c.x)/sm,ny=c.y+(ty-c.y)/sm;
  INPUT in={};in.type=INPUT_MOUSE;in.mi.dwFlags=MOUSEEVENTF_MOVE|MOUSEEVENTF_ABSOLUTE|MOUSEEVENTF_VIRTUALDESK;
  in.mi.dx=(LONG)((nx/GetSystemMetrics(SM_CXVIRTUALSCREEN))*65535);in.mi.dy=(LONG)((ny/GetSystemMetrics(SM_CYVIRTUALSCREEN))*65535);SendInput(1,&in,sizeof(in));}
@@ -524,7 +524,7 @@ int main(int argc,char**argv){
  if(!cfgEmpty&&CFG.find("\"features\": []")!=std::string::npos){printf("[cf] config has zero features\n");return 1;}
  bool keepConsole=false;
  for(int i=1;i<argc;i++){if(!strcmp(argv[i],"-etw"))patchETW();else if(!strcmp(argv[i],"-ghost"))ghost();else if(!strcmp(argv[i],"-console"))keepConsole=true;}
- initNt();initFeats();createMenuWindow();setMenuVisible(true);FreeConsole();
+ initNt();initFeats();FreeConsole();
  initFeats();createMenuWindow();setMenuVisible(true);FreeConsole();
  char ttl[24];sprintf(ttl,"cfg-%d",jit(1000,9999));SetConsoleTitleA(ttl);
  g_sw=GetSystemMetrics(SM_CXSCREEN);g_sh=GetSystemMetrics(SM_CYSCREEN);
