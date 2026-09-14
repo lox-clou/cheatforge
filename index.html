@@ -133,7 +133,7 @@ let plat="win",cur="cs2",sel={};
 Object.keys(WIN).forEach(k=>sel[k]=new Set());Object.keys(AND).forEach(k=>sel[k]=new Set());
 const $=id=>document.getElementById(id);
 const T=()=>plat==="win"?WIN:AND;
-const parseF=v=>v.f.split(" ").map(s=>s.split("|"));
+const parseF=v=>{const o=[];v.f.split(" ").forEach(t=>{if(t.includes("|")){const p=t.split("|");o.push([p[0],p[1]||""])}else if(o.length)o[o.length-1][1]+=" "+t});return o};
 const EMB={"GTA V":"GTA","Minecraft":"MC","Minecraft PE":"MCP","Team Fortress 2":"TF2","Counter-Strike 2":"CS2"};
 const ST={win:null,and:null};
 function syncDot(){const ok=plat==="win"?ST.win:ST.and;$("dot").className=ok==null?"":(ok?"ok":"bad");$("dottxt").textContent=ok==null?"probing…":(ok?(plat==="win"?"win builds online":"injectors online"):"builds missing")}
