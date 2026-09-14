@@ -198,14 +198,15 @@ static void moveMouse(float tx,float ty,float sm){POINT c;GetCursorPos(&c);float
  in.mi.dx=(LONG)((nx/GetSystemMetrics(SM_CXVIRTUALSCREEN))*65535);in.mi.dy=(LONG)((ny/GetSystemMetrics(SM_CYVIRTUALSCREEN))*65535);SendInput(1,&in,sizeof(in));}
 static std::vector<uint32_t> g_cap;static int g_cw,g_ch;
 static void capture(){HDC s=GetDC(0);g_cw=g_sw/4;g_ch=g_sh/4;
- std::vector<uint32_t> full((size_t)g_sw*g_sh);
- HDC m=CreateCompatibleDC(s);HBITMAP hb=CreateCompatibleBitmap(s,g_sw,g_sh);HGDIOBJ ob=SelectObject(m,hb);
- BitBlt(m,0,0,g_sw,g_sh,s,0,0,SRCCOPY);
- BITMAPINFO bi={};bi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);bi.bmiHeader.biWidth=g_sw;bi.bmiHeader.biHeight=-g_sh;bi.bmiHeader.biPlanes=1;bi.bmiHeader.biBitCount=32;
- GetDIBits(m,hb,0,g_sh,full.data(),&bi,DIB_RGB_COLORS);
+ int hw=g_sw/2,hh=g_sh/2;
+ HDC m=CreateCompatibleDC(s);HBITMAP hb=CreateCompatibleBitmap(s,hw,hh);HGDIOBJ ob=SelectObject(m,hb);
+ SetStretchBltMode(m,COLORONCOLOR);StretchBlt(m,0,0,hw,hh,s,0,0,g_sw,g_sh,SRCCOPY);
+ BITMAPINFO bi={};bi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);bi.bmiHeader.biWidth=hw;bi.bmiHeader.biHeight=-hh;bi.bmiHeader.biPlanes=1;bi.bmiHeader.biBitCount=32;
+ std::vector<uint32_t> half((size_t)hw*hh);
+ GetDIBits(m,hb,0,hh,half.data(),&bi,DIB_RGB_COLORS);
  SelectObject(m,ob);DeleteObject(hb);DeleteDC(m);ReleaseDC(0,s);
  g_cap.assign((size_t)g_cw*g_ch,0);
- for(int y=0;y<g_ch;y++)for(int x=0;x<g_cw;x++)g_cap[(size_t)y*g_cw+x]=full[(size_t)(y*4)*g_sw+x*4];}
+ for(int y=0;y<g_ch;y++)for(int x=0;x<g_cw;x++)g_cap[(size_t)y*g_cw+x]=half[(size_t)(y*2)*hw+x*2];}
 static bool nearc(uint32_t c,DWORD col,int tol){int r=c&255,g=(c>>8)&255,b=(c>>16)&255;
  return abs(r-(int)(col&255))<tol&&abs(g-(int)((col>>8)&255))<tol&&abs(b-(int)((col>>16)&255))<tol;}
 struct Cl{int x,y,n;};
@@ -240,6 +241,7 @@ int main(int argc,char**argv){
   std::vector<DI> items;std::vector<Tgt> tg;
   bool lmb=GetAsyncKeyState(VK_LBUTTON)&0x8000,space=GetAsyncKeyState(VK_SPACE)&0x8000;
   frames++;if(GetTickCount()-fpsT>1000){fps=frames;frames=0;fpsT=GetTickCount();}
+  static DWORD cfgT=0;if(GetTickCount()-cfgT>2000){CFG=readAll("config.json");cfgEmpty=CFG.empty();cfgT=GetTickCount();}
 #ifdef HAS_COLOR
   capture();
   if(G.col&&on("c_esp"))for(auto&c:clusters(G.col,G.tol)){if(c.n<4)continue;Tgt t{};t.x=c.x/c.n*4.0f;t.y=c.y/c.n*4.0f;t.w=48;t.h=80;t.hp=-1;tg.push_back(t);}
@@ -263,6 +265,7 @@ int main(int argc,char**argv){
    uintptr_t le=mem.rd<uintptr_t>(base+OFF_ENTLIST+0x8*(i>>9)+0x10);if(!le)continue;
    uintptr_t ent=mem.rd<uintptr_t>(le+0x78*(i&0x1FF));if(!ent||ent==local)continue;
    int hp=mem.rd<int>(ent+OFF_HP),tm=mem.rd<int>(ent+OFF_TEAM);if(hp<=0||hp>100||tm==myTeam)continue;
+   if(local&&mem.rd<int>(local+OFF_CROSS)==i)crossHit=true;
    float x=mem.rd<float>(ent+OFF_ORIGIN),y=mem.rd<float>(ent+OFF_ORIGIN+4),z=mem.rd<float>(ent+OFF_ORIGIN+8);
    if(i%8==0)Sleep(jit(2,5));
    float w=vm[12]*x+vm[13]*y+vm[14]*z+vm[15];if(w<0.01f)continue;
@@ -296,14 +299,15 @@ int main(int argc,char**argv){
 #endif
    }
   }
-  float bd=1e9f,bX=0,bY=0;bool have=false;
+  float bd=1e9f,bX=0,bY=0;bool have=false;bool crossHit=false;
   for(auto&t:tg){if(t.ore)continue;float ax=t.x,ay=on("m_head")||on("c_head")?t.y+8:t.y+t.h/2;
    float dx=ax-g_sw/2,dy=ay-g_sh/2,d=sqrtf(dx*dx+dy*dy);
    float lim=on("m_fov")||on("c_fov")?120:260;
    if(d<bd&&d<lim){bd=d;bX=ax;bY=ay;have=true;}}
   if(have&&(on("m_aim")||on("c_aim")))moveMouse(bX,bY,on("m_smooth")||on("c_smooth")?5.f:1.8f);
   DWORD tcd=on("m_tdly")||on("c_tdly")?150:60;
-  if(have&&bd<40&&(on("m_trig")||on("c_trig"))&&GetTickCount()-lastTrig>tcd){
+  bool trigOk=on("c_trig")?have&&bd<40:crossHit;
+  if(trigOk&&(on("m_trig")||on("c_trig"))&&GetTickCount()-lastTrig>tcd){
    mouse_event(MOUSEEVENTF_LEFTDOWN,0,0,0,0);Sleep(18);mouse_event(MOUSEEVENTF_LEFTUP,0,0,0,0);lastTrig=GetTickCount();
 #ifdef FEAT_D_HITM
    if(on("d_hitm"))Beep(880,40);
