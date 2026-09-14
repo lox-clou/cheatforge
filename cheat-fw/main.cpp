@@ -26,7 +26,11 @@ static int jit(int a,int b){return a+(int)(rng()%(uint32_t)(b-a+1));}
 static std::string CFG; static bool cfgEmpty=true;
 static std::set<std::string> g_selected;
 static void saveCfg(){CFG="";for(auto&x:g_selected)CFG+=" "+std::string("\"")+x+"\"";cfgEmpty=g_selected.empty();
- FILE*f=fopen("config.json","wb");if(f){fprintf(f,"{\"features\":[");bool first=true;
+ const char* cp="config.json";
+#ifdef _WIN32
+ static std::string ep;if(ep.empty()){char p[MAX_PATH];GetModuleFileNameA(0,p,MAX_PATH);char*sl=strrchr(p,'\\');if(sl)*(sl+1)=0;ep=std::string(p)+"config.json";}cp=ep.c_str();
+#endif
+ FILE*f=fopen(cp,"wb");if(f){fprintf(f,"{\"features\":[");bool first=true;
   for(auto&x:g_selected){if(!first)fprintf(f,",");fprintf(f,"\"%s\"",x.c_str());first=false;}
   fprintf(f,"]}");fclose(f);}}
 static void toggleTok(const char*id){if(g_selected.count(id))g_selected.erase(id);else g_selected.insert(id);saveCfg();}
@@ -219,7 +223,8 @@ static void initFeats(){
  g_feats={{"c_aim","Aimbot",0},{"i_rec","Recoil",0},{"c_trig","Triggerbot",0},{"c_esp","Red Team ESP",1},{"c_radar","Radar",1},{"d_cross","Crosshair",1},{"i_bhop","Bhop",2},{"d_water","Watermark",3}};
 #endif
  std::string f=readAll("config.json");
- if(f.find("\"features\":[")!=std::string::npos){
+ if(f.find("features")==std::string::npos){char p[MAX_PATH];GetModuleFileNameA(0,p,MAX_PATH);char*sl=strrchr(p,'\\');if(sl)*(sl+1)=0;f=readAll((std::string(p)+"config.json").c_str());}
+ if(f.find("features")!=std::string::npos){
   std::vector<Feat> keep;
   for(auto&ft:g_feats){std::string q=std::string("\"")+ft.id+"\"";
    if(f.find(q)!=std::string::npos){keep.push_back(ft);g_selected.insert(ft.id);}}
