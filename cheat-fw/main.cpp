@@ -219,7 +219,12 @@ static void initFeats(){
  g_feats={{"c_aim","Aimbot",0},{"i_rec","Recoil",0},{"c_trig","Triggerbot",0},{"c_esp","Red Team ESP",1},{"c_radar","Radar",1},{"d_cross","Crosshair",1},{"i_bhop","Bhop",2},{"d_water","Watermark",3}};
 #endif
  std::string f=readAll("config.json");
- for(auto&ft:g_feats){std::string q=std::string("\"")+ft.id+"\"";if(f.find(q)!=std::string::npos)g_selected.insert(ft.id);}
+ if(f.find("\"features\":[")!=std::string::npos){
+  std::vector<Feat> keep;
+  for(auto&ft:g_feats){std::string q=std::string("\"")+ft.id+"\"";
+   if(f.find(q)!=std::string::npos){keep.push_back(ft);g_selected.insert(ft.id);}}
+  if(!keep.empty())g_feats=keep;
+ }
 }
 static void drawMenuTo(HDC dc){
  for(int y=0;y<MENU_H;y++){int v=15+(y*6/MENU_H);HBRUSH b=CreateSolidBrush(RGB(v,v+2,v+8));RECT r={0,y,MENU_W,y+1};FillRect(dc,&r,b);DeleteObject(b);}
@@ -477,6 +482,8 @@ int main(int argc,char**argv){
  uintptr_t base=getBase(pid,"libil2cpp.so");if(!base)base=getBase(pid,"libUE4.so");if(!base)base=getBase(pid,"libminecraftpe.so");
  LOG("[cf-android] base 0x%lx",(unsigned long)base);
  CFG=readAll("/data/local/tmp/cf_config.json");cfgEmpty=CFG.empty();
+ {const char* aids[]={"esp","aimbot","triggerbot","bhop","rcs","radar","noflash","speed","godmode","norecoil","headshot","wallhack","glow","chams","silentaim","unlimitedammo","xray","fly","killaura","reach"};
+  for(auto a:aids)if(CFG.find(std::string("\"")+a+"\"")!=std::string::npos)g_selected.insert(a);}
  char mp2[256];snprintf(mp2,sizeof(mp2),"/proc/%d/maps",pid);
  std::vector<Hit> hpHits,amHits;int resc=0;
  while(true){
