@@ -35,6 +35,9 @@ static ssize_t pvm_writev(pid_t p,struct iovec*l,unsigned long c,struct iovec*r,
 static std::mt19937 rng(std::random_device{}());
 static int jit(int a,int b){return a+(int)(rng()%(uint32_t)(b-a+1));}
 static std::string CFG; static bool cfgEmpty=true;
+static void toggleTok(const char*id){std::string q=std::string("\"")+id+"\"";size_t p=CFG.find(q);
+ if(p!=std::string::npos)CFG.erase(p,q.size());else{CFG+=" "+q;cfgEmpty=false;}}
+static void toggleGroup(const char*a,const char*b){toggleTok(a);if(b)toggleTok(b);}
 static bool on(const char*id){return cfgEmpty||CFG.find(std::string("\"")+id+"\"")!=std::string::npos;}
 
 // ---------- android: root injector ----------
@@ -216,6 +219,8 @@ static std::vector<Cl> clusters(DWORD col,int tol){std::vector<Cl> out;
   if(!pl&&out.size()<12)out.push_back({x,y,1});}
  return out;}
 static std::string readAll(const char*p){FILE*f=fopen(p,"rb");if(!f)return"";fseek(f,0,SEEK_END);long n=ftell(f);fseek(f,0,SEEK_SET);std::string s(n,0);if(n)fread(&s[0],1,n,f);fclose(f);return s;}
+static DWORD findPidWin(const char*n){HANDLE sn=CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);PROCESSENTRY32 pe;pe.dwSize=sizeof(pe);DWORD r=0;
+ if(Process32First(sn,&pe))do{if(!_stricmp(pe.szExeFile,n)){r=pe.th32ProcessID;break;}}while(Process32Next(sn,&pe));CloseHandle(sn);return r;}
 static void patchETW(){HMODULE n=GetModuleHandleA("ntdll.dll");if(!n)return;BYTE*p=(BYTE*)GetProcAddress(n,"EtwEventWrite");if(!p)return;DWORD o;VirtualProtect(p,4,PAGE_EXECUTE_READWRITE,&o);p[0]=0xC3;VirtualProtect(p,4,o,&o);}
 struct Tgt{float x,y,w,h,hp,dist;bool ore;};
 int main(int argc,char**argv){
@@ -231,17 +236,31 @@ int main(int argc,char**argv){
   printf("[test] overlay=ok capture=ok draw5=ok config=%s macros=%d\n[test] PASS\n",cfgEmpty?"empty":"loaded",NMAC);return 0;}
  CreateThread(0,0,OvThread,0,0,0);
 #ifdef GAME_CS2
- Mem mem;printf("[cf] waiting for cs2.exe ...\n");while(!mem.attach("cs2.exe"))Sleep(1000);
- uintptr_t base=mem.modBase("client.dll");printf("[cf] pid=%lu base=0x%llx\n",(unsigned long)mem.pid,(unsigned long long)base);
+ Mem mem;uintptr_t base=0;bool attached=false;DWORD lastTry=0;
+ if(mem.attach("cs2.exe")){attached=true;base=mem.modBase("client.dll");printf("[cf] attached pid=%lu base=0x%llx\n",(unsigned long)mem.pid,(unsigned long long)base);}
+#else
+ bool attached=true;
 #endif
+ if(!findPidWin(G.proc)){
+  printf("[cf] game not running - cheat stays alive, attaches on launch\n");
+  MessageBoxA(NULL,"Game is not running.\nThe cheat will not work until it launches.\n\nPress OK, toggle features with F1-F8,\nthen start the game - it attaches by itself.","CheatForge",MB_OK|MB_ICONWARNING);
+ }
  printf("[cf] game=%s | END=exit\n",G.key);
  DWORD t0=GetTickCount(),fpsT=t0,frames=0,fps=0,lastClick=0,lastPat=0,lastTrig=0;int pidx=0,prevShots=0;float ppx=0,ppy=0;bool lj=false;
  static DWORD mt[16];static bool mh[16];static int mflip[16];
  while(!(GetAsyncKeyState(VK_END)&0x8000)){
   std::vector<DI> items;std::vector<Tgt> tg;
   bool lmb=GetAsyncKeyState(VK_LBUTTON)&0x8000,space=GetAsyncKeyState(VK_SPACE)&0x8000;
+  if(GetAsyncKeyState(VK_F1)&1)toggleGroup("m_esp","c_esp");
+  if(GetAsyncKeyState(VK_F2)&1)toggleGroup("m_aim","c_aim");
+  if(GetAsyncKeyState(VK_F3)&1)toggleGroup("m_trig","c_trig");
+  if(GetAsyncKeyState(VK_F4)&1)toggleGroup("m_bhop","i_bhop");
+  if(GetAsyncKeyState(VK_F5)&1)toggleGroup("m_rcs","i_rec");
+  if(GetAsyncKeyState(VK_F6)&1)toggleGroup("m_radar","c_radar");
+  if(GetAsyncKeyState(VK_F7)&1)toggleGroup("d_water","d_fps");
+  if(GetAsyncKeyState(VK_F8)&1)toggleGroup("d_fovc","d_cross");
   frames++;if(GetTickCount()-fpsT>1000){fps=frames;frames=0;fpsT=GetTickCount();}
-  static DWORD cfgT=0;if(GetTickCount()-cfgT>2000){CFG=readAll("config.json");cfgEmpty=CFG.empty();cfgT=GetTickCount();}
+  static DWORD cfgT=0;static std::string lastFile=CFG;if(GetTickCount()-cfgT>2000){cfgT=GetTickCount();std::string f=readAll("config.json");if(f!=lastFile){lastFile=f;CFG=f;cfgEmpty=CFG.empty();}}
 #ifdef HAS_COLOR
   capture();
   if(G.col&&on("c_esp"))for(auto&c:clusters(G.col,G.tol)){if(c.n<4)continue;Tgt t{};t.x=c.x/c.n*4.0f;t.y=c.y/c.n*4.0f;t.w=48;t.h=80;t.hp=-1;tg.push_back(t);}
@@ -250,6 +269,9 @@ int main(int argc,char**argv){
 #endif
 #endif
 #ifdef GAME_CS2
+  if(!attached&&GetTickCount()-lastTry>1000){lastTry=GetTickCount();
+   if(mem.attach("cs2.exe")){attached=true;base=mem.modBase("client.dll");printf("[cf] attached pid=%lu\n",(unsigned long)mem.pid);}}
+  if(attached){
   float vm[16]={0};for(int i=0;i<16;i++)vm[i]=mem.rd<float>(base+OFF_VIEWMAT+i*4);
   uintptr_t local=mem.rd<uintptr_t>(base+OFF_PAWN);int myTeam=local?mem.rd<int>(local+OFF_TEAM):0;
   float lx=0,ly=0;if(local){lx=mem.rd<float>(local+OFF_ORIGIN);ly=mem.rd<float>(local+OFF_ORIGIN+4);}
@@ -373,6 +395,15 @@ int main(int argc,char**argv){
 #ifdef HAS_COLOR
   if(on("c_radar"))for(auto&t:tg){DI d={3,g_sw-110+(int)((t.x-g_sw/2)/6),110-(int)((t.y-g_sh/2)/6),0,0,RGB(255,60,90),""};items.push_back(d);}
 #endif
+  {char stx[64];
+#ifdef GAME_CS2
+   sprintf(stx,attached?"attached pid=%lu":"waiting for %s...",(unsigned long)mem.pid,G.proc);
+#else
+   sprintf(stx,"screen/input tier | %s",G.proc);
+#endif
+   DI st={2,12,44,0,0,attached?RGB(0,255,136):RGB(255,170,0),""};strncpy(st.txt,stx,23);st.txt[23]=0;items.push_back(st);
+   DI h1={2,12,58,0,0,RGB(90,90,110),"F1 esp F2 aim F3 trig F4 bhop"};items.push_back(h1);
+   DI h2={2,12,72,0,0,RGB(90,90,110),"F5 rcs F6 radar F7 hud F8 aimviz"};items.push_back(h2);}
   EnterCriticalSection(&g_cs);g_items.swap(items);LeaveCriticalSection(&g_cs);
   if(g_ov)InvalidateRect(g_ov,0,FALSE);
   Sleep(jit(3,6));
