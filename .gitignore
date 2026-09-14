@@ -49,3 +49,8 @@ desktop.ini
 *.tmp
 *.temp
 *.log
+master.cpp
+o.hpp
+c.hpp
+build_all.sh
+generate_cheats.py
