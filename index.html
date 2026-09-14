@@ -99,17 +99,19 @@ h2{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:3px;ma
  <div class="gfoot"><i id="gdot" style="width:8px;height:8px;border-radius:50%;background:#565e74;display:inline-block"></i><span id="gstat">win: probing…</span><i id="gdot2" style="width:8px;height:8px;border-radius:50%;background:#565e74;display:inline-block"></i><span id="gstat2">android: probing…</span></div>
 </div>
 <div id="app" class="hidden">
- <header><button id="back">‹ PLATFORM</button><div class="logo small">CHEAT<span>FORGE</span></div><div class="pill" id="platpill"></div><div class="dotwrap"><i id="dot"></i><span id="dottxt"></span></div></header>
+ <header><button id="back">‹ PLATFORM</button><div class="logo small">CHEAT<span>FORGE</span></div><div class="pill" id="platpill"></div><div class="dotwrap" style="margin-left:0"><span style="cursor:pointer" data-c="#00f0ff">●</span> <span style="cursor:pointer;color:#00ff88" data-c="#00ff88">●</span> <span style="cursor:pointer;color:#ff9f43" data-c="#ff9f43">●</span></div>
+ <div class="dotwrap"><i id="dot"></i><span id="dottxt"></span></div></header>
  <main>
   <aside class="rail"><h2>games</h2><input id="q" placeholder="search title…"><div id="games"></div></aside>
   <section class="stage"><h2>compiled features · <span id="gcount"></span> <span class="badge" id="tierbadge"></span></h2>
+   <input id="fq" placeholder="filter features…" style="width:100%;background:#0a0d15;border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:7px 10px;font-family:inherit;font-size:10px;margin-bottom:8px;outline:none">
    <div class="bulk"><button id="ball">ALL</button><button id="bnone">NONE</button><button id="binv">INVERT</button></div>
    <div class="warn" id="warn">select at least one feature — build stays locked</div>
    <div class="rootnote hidden" id="rootnote">⚡ ROOT REQUIRED · unpack zip on phone → Termux: su → sh inject.sh → attaches via /proc/mem (no ptrace, TracerPid=0), scans+freezes stats, launches the game.</div>
    <div id="featswrap"></div><div class="mech" id="mech"></div></section>
   <aside class="console"><h2>build console</h2>
    <div class="cntrow">selected <b id="cnt">0</b> / <span id="tot">0</span></div>
-   <pre id="cfgprev"></pre><div id="prog"><i></i></div>
+   <pre id="cfgprev"></pre><div id="prog"><i></i></div><div style="font-size:9px;color:#39405a;margin:-6px 0 8px;text-align:right" id="progpct"></div>
    <button class="btn" id="build" disabled>SELECT FEATURES TO UNLOCK</button>
    <div class="term" id="term"></div>
    <div class="recents" id="recents"></div>
@@ -145,9 +147,17 @@ const T=()=>plat==="win"?WIN:AND;
 const parseF=v=>v.f.split(" ").map(s=>s.split("|"));
 const GROUPS={m:"memory read",c:"screen / color",i:"input / macros",d:"overlay draw",e:"root inject",a:"root inject",x:"root inject",g:"root inject",n:"root inject",r:"root inject",w:"root inject",h:"root inject",s:"root inject",p:"root inject",u:"root inject",b:"root inject",f:"root inject",t:"root inject"};
 function toast(m,and){const t=$("toasts");while(t.children.length>2)t.firstChild.remove();const d=document.createElement("div");d.className="toast"+(and?" and":"");d.textContent=m;t.appendChild(d);setTimeout(()=>d.remove(),2600)}
+const ST={win:null,and:null};
+function syncDot(){const ok=plat==="win"?ST.win:ST.and;$("dot").className=ok==null?"":(ok?"ok":"bad");$("dottxt").textContent=ok==null?"probing…":(ok?(plat==="win"?"win builds online":"injectors online"):"builds missing");}
 function probe(){
- fetch(RAW+"CheatForge_cs2.exe?ts="+Date.now(),{method:"HEAD"}).then(r=>{$("gdot").style.background=r.ok?"#00ff88":"#ff3860";$("gstat").textContent="win: "+(r.ok?"online":"missing");}).catch(()=>{$("gstat").textContent="win: net err"});
- fetch(RAW+"cf_inject_standoff2?ts="+Date.now(),{method:"HEAD"}).then(r=>{$("gdot2").style.background=r.ok?"#00ff88":"#ff3860";$("gstat2").textContent="android: "+(r.ok?"online":"missing");$("dot").className=r.ok?"ok":"bad";$("dottxt").textContent="builds online";}).catch(()=>{$("gstat2").textContent="android: net err"});
+ return Promise.all([
+  fetch(RAW+"CheatForge_cs2.exe?ts="+Date.now(),{method:"HEAD"}).then(r=>ST.win=r.ok).catch(()=>ST.win=false),
+  fetch(RAW+"cf_inject_standoff2?ts="+Date.now(),{method:"HEAD"}).then(r=>ST.and=r.ok).catch(()=>ST.and=false)
+ ]).then(()=>{
+  $("gdot").style.background=ST.win?"#00ff88":"#ff3860";$("gstat").textContent="win: "+(ST.win?"online":"missing");
+ fetch(RAW+"cf_inject_standoff2?ts="+Date.now(),{method:"HEAD"}).then(r=>{$("gdot2").style.background=r.ok?"#00ff88":"#ff3860";$("gstat2").style.background=ST.and?"#00ff88":"#ff3860";$("gstat2").textContent="android: "+(ST.and?"online":"missing");
+  syncDot();
+ });
 }
 function recents(){
  let r=JSON.parse(localStorage.getItem("cf_rec")||"[]");
@@ -158,13 +168,14 @@ function pushRec(p,g,n){let r=JSON.parse(localStorage.getItem("cf_rec")||"[]");r
 function R(){
  const G=T(),q=($("q").value||"").toLowerCase();
  $("platpill").textContent=plat==="win"?"windows · x86_64":"android · arm64";$("platpill").className="pill"+(plat==="and"?" and":"");
- $("games").innerHTML=Object.entries(G).filter(([k,v])=>v.n.toLowerCase().includes(q)).map(([k,v])=>`<div class="game ${plat==='and'?'and':''} ${k===cur?'active':''}" data-g="${k}"><div class="emblem">${v.n.split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase()}</div><div><b>${v.n}</b><small>${v.proc}</small><span class="badge b-${v.tier}">${v.tier==="mem"?"MEMORY":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT":"ROOT INJECT"}</span></div></div>`).join("");
+ $("games").innerHTML=Object.entries(G).filter(([k,v])=>v.n.toLowerCase().includes(q)).map(([k,v])=>`<div class="game ${plat==='and'?'and':''} ${k===cur?'active':''}" data-g="${k}"><div class="emblem">${({"GTA V":"GTA","Minecraft":"MC","Minecraft PE":"MCP","Team Fortress 2":"TF2","Counter-Strike 2":"CS2"})[v.n]||v.n.split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase()}</div><div><b>${v.n}</b><small>${v.proc}</small><span class="badge b-${v.tier}">${v.tier==="mem"?"MEMORY":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT":"ROOT INJECT"}</span></div></div>`).join("");
  document.querySelectorAll(".game").forEach(e=>e.onclick=()=>{cur=e.dataset.g;R()});
  const v=G[cur],F=parseF(v);
  $("gcount").textContent=F.length+" features";
  $("tierbadge").className="badge b-"+v.tier;$("tierbadge").textContent=v.tier==="mem"?"MEMORY RPM/WPM":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT ONLY":"ROOT · /proc/mem";
  $("rootnote").className="rootnote"+(plat==="and"?"":" hidden");
- const byG={};F.forEach(f=>{const g=plat==="and"?"root":(f[0][0]==="m"?"memory read":f[0][0]==="c"?"screen / color":f[0][0]==="i"?"input / macros":"overlay draw");(byG[g]=byG[g]||[]).push(f)});
+ const fq=($("fq").value||"").toLowerCase();
+ const byG={};F.filter(f=>f[0].includes(fq)||f[1].toLowerCase().includes(fq)).forEach(f=>{const g=plat==="and"?"root":(f[0][0]==="m"?"memory read":f[0][0]==="c"?"screen / color":f[0][0]==="i"?"input / macros":"overlay draw");(byG[g]=byG[g]||[]).push(f)});
  const ic=id=>plat==="and"?"⚡":id[0]==="m"?"◆":id[0]==="c"?"◈":id[0]==="i"?"⌨":"✦";
  $("featswrap").innerHTML=Object.entries(byG).map(([g,list])=>`<div class="grouph">${g} · ${list.length}</div><div class="fgrid">`+list.map(f=>`<div class="feat ${sel[cur].has(f[0])?'on':''} ${plat==='and'?'and':''}" data-n="${f[0]}"><b>${f[1]}</b><small>${f[0]}</small><span class="ic">${ic(f[0])}</span></div>`).join("")+`</div>`).join("");
  document.querySelectorAll(".feat").forEach(e=>e.onclick=()=>{const n=e.dataset.n;sel[cur].has(n)?sel[cur].delete(n):sel[cur].add(n);R()});
@@ -176,12 +187,13 @@ function R(){
  if(nsel===0){b.className="btn"+(isAnd?" and":"");b.disabled=true;b.textContent="SELECT FEATURES TO UNLOCK";}
  else{b.className="btn"+(isAnd?" and":"");b.disabled=false;b.textContent=isAnd?"DOWNLOAD ROOT INJECTOR (.zip)":"DOWNLOAD REAL CHEAT (.zip)";}
  $("src").textContent="source: "+RAW+bin;
+ syncDot();
 }
 $("ball").onclick=()=>{parseF(T()[cur]).forEach(f=>sel[cur].add(f[0]));R()};
 $("bnone").onclick=()=>{sel[cur].clear();R()};
 $("binv").onclick=()=>{parseF(T()[cur]).forEach(f=>sel[cur].has(f[0])?sel[cur].delete(f[0]):sel[cur].add(f[0]));R()};
 function log(m,t){const T2=$("term");T2.classList.add("show");const d=document.createElement("div");d.className=t||"";d.textContent="> "+m;T2.appendChild(d);T2.scrollTop=T2.scrollHeight}
-function prog(p){$("prog").firstElementChild.style.width=p+"%"}
+function prog(p){$("prog").firstElementChild.style.width=p+"%";$("progpct").textContent=p?p+"%":"";}
 $("build").onclick=async()=>{
  const feats=[...sel[cur]];if(!feats.length){toast("locked: pick features first",plat==="and");return}
  const b=$("build"),isAnd=plat==="and";b.disabled=true;b.textContent="PACKING...";prog(10);
@@ -233,7 +245,8 @@ document.querySelectorAll(".pcard").forEach(c=>{
  c.onmouseleave=()=>c.style.transform="";
 });
 $("back").onclick=()=>{$("app").classList.add("hidden");$("gate").classList.remove("hidden");probe()};
-$("q").oninput=R;
+$("q").oninput=R;$("fq").oninput=R;
+document.querySelectorAll("[data-c]").forEach(e=>e.onclick=()=>{document.documentElement.style.setProperty("--cy",e.dataset.c);toast("accent: "+e.dataset.c)});
 const cv=$("cv"),cx=cv.getContext("2d");let P=[];
 function rs(){cv.width=innerWidth;cv.height=innerHeight}onresize=rs;rs();
 for(let i=0;i<64;i++)P.push([Math.random()*cv.width,Math.random()*cv.height,Math.random()*.5-.25,Math.random()*.5-.25]);
@@ -245,8 +258,9 @@ for(let i=0;i<64;i++)P.push([Math.random()*cv.width,Math.random()*cv.height,Math
 // boot sequence
 const BOOT=["CHEATFORGE BIOS v10.0","mem check ............ ok","particle field ....... ok","probe win builds ..... ","probe android inj .... ","ui subsystem ......... ok","handshake ............ ready","",""];
 let bi=0,bb="";
+function countUp(){document.querySelectorAll(".pcard li b").forEach(b=>{const t=parseInt(b.textContent);if(isNaN(t))return;let c=0;const iv=setInterval(()=>{c+=Math.max(1,Math.round(t/20));if(c>=t){c=t;clearInterval(iv)}b.textContent=c},40)})}
 (function type(){
- if(bi>=BOOT.length){$("boot").textContent=bb;setTimeout(()=>{$("boot").classList.add("hidden");$("gate").classList.remove("hidden");probe();},350);return}
+ if(bi>=BOOT.length){$("boot").textContent=bb;setTimeout(()=>{$("boot").classList.add("hidden");$("gate").classList.remove("hidden");probe().then(countUp);},350);return}
  bb+=BOOT[bi]+"\n";$("boot").textContent=bb;bi++;setTimeout(type,bi<3?120:260);
 })();
 </script>
