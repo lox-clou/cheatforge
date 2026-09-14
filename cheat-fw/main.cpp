@@ -6,6 +6,8 @@
 #include <string>
 #include <random>
 #include <cstdio>
+#include <set>
+#include <algorithm>
 #ifdef _WIN32
 #include <windows.h>
 #include <tlhelp32.h>
@@ -23,8 +25,7 @@
 static std::mt19937 rng(std::random_device{}());
 static int jit(int a,int b){return a+(int)(rng()%(uint32_t)(b-a+1));}
 static std::string CFG; static bool cfgEmpty=true;
-static void toggleTok(const char*id){std::string q=std::string("\"")+id+"\"";size_t p=CFG.find(q);
- if(p!=std::string::npos)CFG.erase(p,q.size());else{CFG+=" "+q;cfgEmpty=false;}}
+static void toggleTok(const char*id){if(g_selected.count(id))g_selected.erase(id);else g_selected.insert(id);saveCfg();}
 static void toggleGroup(const char*a,const char*b){toggleTok(a);if(b)toggleTok(b);}
 static bool on(const char*id){return cfgEmpty||CFG.find(std::string("\"")+id+"\"")!=std::string::npos;}
 static std::string readAll(const char*p){FILE*f=fopen(p,"rb");if(!f)return"";fseek(f,0,SEEK_END);long n=ftell(f);fseek(f,0,SEEK_SET);std::string s(n,0);if(n)fread(&s[0],1,n,f);fclose(f);return s;}
@@ -335,6 +336,142 @@ static void createMenuWindow(){
  g_menu=CreateWindowExA(WS_EX_TOPMOST|WS_EX_TOOLWINDOW,"CheatForgeMenu","",WS_POPUP,MENU_X,MENU_Y,MENU_W,MENU_H,0,0,wc.hInstance,0);
 }
 
+
+// ===== CheatForge GUI v2 — draggable topmost, modern design =====
+static bool g_menuOpen=true;
+static int g_activeTab=0;
+static int g_hoverIdx=-1;
+static HWND g_menu=0;
+static const int MENU_W=500, MENU_H=640, MENU_X=80, MENU_Y=80;
+struct Feat{const char*id;const char*name;int tab;};
+static std::vector<Feat> g_feats;
+static const char* TABN[]={"AIMBOT","VISUALS","MOVEMENT","MISC"};
+static void initFeats(){
+#ifdef GAME_CS2
+ g_feats={{"m_aim","Silent Aim",0},{"m_head","Head Priority",0},{"m_smooth","Human Smooth",0},
+  {"m_fov","FOV Limit",0},{"m_trig","Triggerbot",0},{"m_rcs","Recoil Ctrl",0},
+  {"m_esp","Player ESP",1},{"m_hp","Health Bars",1},{"m_dist","Distance",1},
+  {"m_radar","World Radar",1},{"d_fovc","FOV Circle",1},{"d_cross","Crosshair",1},
+  {"d_trac","Tracers",1},{"d_hitm","Hitmarker",1},
+  {"m_bhop","Bunny Hop",2},{"m_strafe","Auto Strafe",2},
+  {"m_noflash","No Flash",3},{"i_rapid","Rapid Fire",3},{"d_water","Watermark",3},
+  {"d_fps","FPS Meter",3},{"d_timer","Session Timer",3}};
+#elif defined(GAME_VALORANT)
+ g_feats={{"c_aim","Aimbot",0},{"c_head","Head Priority",0},{"c_smooth","Smooth",0},
+  {"c_trig","Triggerbot",0},{"i_rec","Recoil Macro",0},
+  {"c_esp","ESP Outlines",1},{"c_radar","Radar",1},{"d_fovc","FOV Circle",1},
+  {"d_cross","Crosshair",1},{"d_hitm","Hitmarker",1},
+  {"i_rapid","Rapid Fire",3},{"d_water","Watermark",3},{"d_fps","FPS Meter",3}};
+#elif defined(GAME_RUST)
+ g_feats={{"i_rec","Recoil AK",0},{"i_rak","AK Pattern",0},{"i_rm4","M4 Pattern",0},
+  {"i_rapid","Rapid Fire",0},
+  {"c_ore","Ore ESP",1},{"d_cross","Crosshair",1},{"d_water","Watermark",1},
+  {"i_bhop","Bunny Hop",2},{"i_strafe","Air Strafe",2},{"i_tap","Tap Strafe",2},
+  {"d_fps","FPS Meter",3}};
+#elif defined(GAME_APEX)
+ g_feats={{"c_aim","Aimbot",0},{"c_head","Head Priority",0},{"c_trig","Triggerbot",0},
+  {"i_rec","Recoil Macro",0},{"i_tap","Tap Strafe",0},
+  {"c_esp","ESP Glow",1},{"c_radar","Radar",1},{"d_cross","Crosshair",1},
+  {"i_bhop","Bhop",2},{"i_strafe","Strafe",2},
+  {"d_water","Watermark",3},{"d_fps","FPS Meter",3}};
+#elif defined(GAME_PUBG)
+ g_feats={{"c_aim","Aimbot",0},{"i_rec","M416 Recoil",0},{"i_rak","AKM Pattern",0},
+  {"c_trig","Triggerbot",0},
+  {"c_esp","ESP",1},{"c_radar","Radar",1},{"d_cross","Crosshair",1},
+  {"i_rapid","Rapid Fire",3},{"d_water","Watermark",3}};
+#elif defined(GAME_FORTNITE)
+ g_feats={{"i_rec","AR Recoil",0},{"i_rak","AR Pattern",0},{"i_rm4","SMG Pattern",0},
+  {"i_rapid","Rapid Fire",0},
+  {"d_cross","Crosshair",1},{"d_water","Watermark",1},
+  {"i_bhop","Bhop",2},{"i_strafe","Strafe",2},
+  {"d_fps","FPS Meter",3}};
+#elif defined(GAME_GTA5)
+ g_feats={{"i_rec","Recoil",0},{"i_rapid","Rapid Fire",0},{"i_aimkey","Aim Spam",0},
+  {"d_cross","Crosshair",1},{"d_water","Watermark",1},
+  {"i_bhop","Jump Spam",2},
+  {"d_fps","FPS Meter",3}};
+#elif defined(GAME_MINECRAFT)
+ g_feats={{"c_aim","Aimbot",0},{"c_trig","Triggerbot",0},{"i_rapid","CPS Boost",0},
+  {"c_esp","Nametag ESP",1},{"c_ore","Ore ESP",1},{"c_radar","Radar",1},
+  {"i_bhop","Bhop",2},
+  {"d_water","Watermark",3},{"d_fps","FPS Meter",3}};
+#elif defined(GAME_TF2)
+ g_feats={{"c_aim","Aimbot",0},{"i_rec","Recoil",0},{"c_trig","Triggerbot",0},
+  {"c_esp","Red Team ESP",1},{"c_radar","Radar",1},{"d_cross","Crosshair",1},
+  {"i_bhop","Bhop",2},
+  {"d_water","Watermark",3}};
+#endif
+ std::string f=readAll("config.json");
+ for(auto&ft:g_feats){std::string q=std::string("\"")+ft.id+"\"";
+  if(f.find(q)!=std::string::npos)g_selected.insert(ft.id);}
+}
+static void drawMenuTo(HDC dc){
+ for(int y=0;y<MENU_H;y++){int v=15+(y*6/MENU_H);
+  HBRUSH b=CreateSolidBrush(RGB(v,v+2,v+8));RECT r={0,y,MENU_W,y+1};FillRect(dc,&r,b);DeleteObject(b);}
+ HPEN bo=CreatePen(PS_SOLID,2,RGB(0,240,255));HGDIOBJ op=SelectObject(dc,bo);
+ HGDIOBJ ob=SelectObject(dc,GetStockObject(NULL_BRUSH));
+ Rectangle(dc,1,1,MENU_W-1,MENU_H-1);SelectObject(dc,op);SelectObject(dc,ob);DeleteObject(bo);
+ SetBkMode(dc,TRANSPARENT);
+ SetTextColor(dc,RGB(0,60,80));TextOutA(dc,19,15,"CHEATFORGE",10);
+ SetTextColor(dc,RGB(0,240,255));TextOutA(dc,18,14,"CHEATFORGE",10);
+ SetTextColor(dc,RGB(110,116,140));TextOutA(dc,160,16,"external  |  INSERT to hide",27);
+ {RECT cr={MENU_W-34,8,MENU_W-10,32};HBRUSH cb=CreateSolidBrush(RGB(255,60,90));FillRect(dc,&cr,cb);DeleteObject(cb);
+  SetTextColor(dc,RGB(20,0,0));TextOutA(dc,MENU_W-26,13,"X",1);}
+ int tabW=MENU_W/4-4;
+ for(int t=0;t<4;t++){int x=4+t*(tabW+4);RECT tr={x,44,x+tabW,70};bool active=t==g_activeTab;
+  HBRUSH tb=CreateSolidBrush(active?RGB(0,240,255):RGB(26,29,40));FillRect(dc,&tr,tb);DeleteObject(tb);
+  if(!active){HPEN tp=CreatePen(PS_SOLID,1,RGB(50,54,70));HGDIOBJ op2=SelectObject(dc,tp);
+   HGDIOBJ ob2=SelectObject(dc,GetStockObject(NULL_BRUSH));Rectangle(dc,tr.left,tr.top,tr.right,tr.bottom);
+   SelectObject(dc,op2);SelectObject(dc,ob2);DeleteObject(tp);}
+  SetTextColor(dc,active?RGB(0,0,0):RGB(160,166,190));TextOutA(dc,tr.left+12,tr.top+7,TABN[t],(int)strlen(TABN[t]));}
+ HPEN dv=CreatePen(PS_SOLID,1,RGB(35,38,52));HGDIOBJ dvop=SelectObject(dc,dv);
+ MoveToEx(dc,10,82,0);LineTo(dc,MENU_W-10,82);SelectObject(dc,dvop);DeleteObject(dv);
+ int y=94,idx=0;
+ for(auto&f:g_feats){if(f.tab!=g_activeTab){idx++;continue;}
+  bool isOn=on(f.id);bool hov=idx==g_hoverIdx;
+  RECT rr={8,y,MENU_W-8,y+34};
+  if(hov){HBRUSH hb=CreateSolidBrush(RGB(28,32,46));FillRect(dc,&rr,hb);DeleteObject(hb);}
+  SetTextColor(dc,isOn?RGB(235,240,250):RGB(140,146,170));TextOutA(dc,22,y+10,f.name,(int)strlen(f.name));
+  int swx=MENU_W-60,swy=y+8,sww=36,swh=18;
+  HBRUSH sbg=CreateSolidBrush(isOn?RGB(0,240,255):RGB(50,54,70));
+  HGDIOBJ sbp=SelectObject(dc,sbg);HGDIOBJ sbpen=SelectObject(dc,GetStockObject(NULL_PEN));
+  RoundRect(dc,swx,swy,swx+sww,swy+swh,18,18);
+  SelectObject(dc,sbp);SelectObject(dc,sbpen);DeleteObject(sbg);
+  int bx=isOn?swx+sww-16:swx+2;
+  HBRUSH ball=CreateSolidBrush(RGB(255,255,255));HGDIOBJ bbp=SelectObject(dc,ball);
+  HGDIOBJ bpen=SelectObject(dc,GetStockObject(NULL_PEN));
+  Ellipse(dc,bx,swy+2,bx+14,swy+16);
+  SelectObject(dc,bbp);SelectObject(dc,bpen);DeleteObject(ball);
+  y+=36;idx++;if(y>MENU_H-30)break;}
+ SetTextColor(dc,RGB(80,86,110));TextOutA(dc,12,MENU_H-22,"CheatForge v9  |  END = exit cheat",34);
+}
+static int featAt(int x,int y){if(y<94||x<8||x>MENU_W-8)return -1;int idx=0;int yy=94;
+ for(auto&f:g_feats){if(f.tab!=g_activeTab){idx++;continue;}
+  if(y>=yy&&y<yy+34)return idx;yy+=36;idx++;}return -1;}
+static void menuClick(int x,int y){
+ if(x>=MENU_W-34&&y>=8&&y<32){setMenuVisible(false);g_menuOpen=false;return;}
+ if(y>=44&&y<70){int tabW=MENU_W/4-4;int t=(x-4)/(tabW+4);if(t>=0&&t<4){g_activeTab=t;g_hoverIdx=-1;InvalidateRect(g_menu,0,FALSE);}return;}
+ int idx=featAt(x,y);if(idx>=0){int j=0;for(auto&f:g_feats){if(f.tab==g_activeTab){if(j==idx){toggleTok(f.id);InvalidateRect(g_menu,0,FALSE);return;}}j++;}}}
+static LRESULT CALLBACK MenuProc(HWND h,UINT m,WPARAM w,LPARAM l){
+ if(m==WM_NCHITTEST){POINT p={(short)LOWORD(l),(short)HIWORD(l)};ScreenToClient(h,&p);
+  if(p.x>=MENU_W-34&&p.y<34)return HTCLIENT;if(p.y<40)return HTCAPTION;return HTCLIENT;}
+ if(m==WM_PAINT){PAINTSTRUCT ps;HDC wdc=BeginPaint(h,&ps);HDC dc=CreateCompatibleDC(wdc);
+  HBITMAP bm=CreateCompatibleBitmap(wdc,MENU_W,MENU_H);HGDIOBJ ob=SelectObject(dc,bm);
+  drawMenuTo(dc);BitBlt(wdc,0,0,MENU_W,MENU_H,dc,0,0,SRCCOPY);
+  SelectObject(dc,ob);DeleteObject(bm);DeleteDC(dc);EndPaint(h,&ps);return 0;}
+ if(m==WM_ERASEBKGND)return 1;
+ if(m==WM_LBUTTONDOWN){menuClick((short)LOWORD(l),(short)HIWORD(l));return 0;}
+ if(m==WM_MOUSEMOVE){int ni=featAt((short)LOWORD(l),(short)HIWORD(l));
+  if(ni!=g_hoverIdx){g_hoverIdx=ni;InvalidateRect(h,0,FALSE);}
+  TRACKMOUSEEVENT tme={sizeof(tme),TME_LEAVE,h,0};TrackMouseEvent(&tme);return 0;}
+ if(m==WM_MOUSELEAVE){g_hoverIdx=-1;InvalidateRect(h,0,FALSE);return 0;}
+ return DefWindowProcA(h,m,w,l);}
+static void setMenuVisible(bool v){if(!g_menu)return;ShowWindow(g_menu,v?SW_SHOW:SW_HIDE);}
+static void createMenuWindow(){WNDCLASSA wc={};wc.lpfnWndProc=MenuProc;wc.hInstance=GetModuleHandleA(0);
+ wc.lpszClassName="CheatForgeMenu";wc.hbrBackground=0;RegisterClassA(&wc);
+ g_menu=CreateWindowExA(WS_EX_TOPMOST|WS_EX_TOOLWINDOW,"CheatForgeMenu","",WS_POPUP,
+  MENU_X,MENU_Y,MENU_W,MENU_H,0,0,wc.hInstance,0);}
+
 static LRESULT CALLBACK OvProc(HWND h,UINT m,WPARAM w,LPARAM l){
  if(m==WM_LBUTTONDOWN&&g_menuOpen){menuClick((short)LOWORD(l),(short)HIWORD(l));InvalidateRect(h,0,FALSE);return 0;}
  if(m==WM_PAINT){PAINTSTRUCT ps;HDC dc=BeginPaint(h,&ps);RECT r;GetClientRect(h,&r);
@@ -387,7 +524,7 @@ int main(int argc,char**argv){
  if(!cfgEmpty&&CFG.find("\"features\": []")!=std::string::npos){printf("[cf] config has zero features\n");return 1;}
  bool keepConsole=false;
  for(int i=1;i<argc;i++){if(!strcmp(argv[i],"-etw"))patchETW();else if(!strcmp(argv[i],"-ghost"))ghost();else if(!strcmp(argv[i],"-console"))keepConsole=true;}
- initNt();
+ initNt();initFeats();createMenuWindow();setMenuVisible(true);FreeConsole();
  initFeats();createMenuWindow();setMenuVisible(true);FreeConsole();
  char ttl[24];sprintf(ttl,"cfg-%d",jit(1000,9999));SetConsoleTitleA(ttl);
  g_sw=GetSystemMetrics(SM_CXSCREEN);g_sh=GetSystemMetrics(SM_CYSCREEN);
@@ -427,6 +564,8 @@ int main(int argc,char**argv){
   if(GetAsyncKeyState(VK_F6)&1)toggleGroup("m_radar","c_radar");
   if(GetAsyncKeyState(VK_F7)&1)toggleGroup("d_water","d_fps");
   if(GetAsyncKeyState(VK_F8)&1)toggleGroup("d_fovc","d_cross");
+  static bool prevIns=false;bool ins=GetAsyncKeyState(VK_INSERT)&0x8000;
+  if(ins&&!prevIns){g_menuOpen=!g_menuOpen;setMenuVisible(g_menuOpen);}prevIns=ins;
   static bool prevIns=false;bool ins=GetAsyncKeyState(VK_INSERT)&0x8000;
   if(ins&&!prevIns){g_menuOpen=!g_menuOpen;setMenuVisible(g_menuOpen);}prevIns=ins;
   static bool prevIns=false;bool ins=GetAsyncKeyState(VK_INSERT)&0x8000;
