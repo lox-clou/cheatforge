@@ -155,7 +155,7 @@ function probe(){
   fetch(RAW+"cf_inject_standoff2?ts="+Date.now(),{method:"HEAD"}).then(r=>ST.and=r.ok).catch(()=>ST.and=false)
  ]).then(()=>{
   $("gdot").style.background=ST.win?"#00ff88":"#ff3860";$("gstat").textContent="win: "+(ST.win?"online":"missing");
- fetch(RAW+"cf_inject_standoff2?ts="+Date.now(),{method:"HEAD"}).then(r=>{$("gdot2").style.background=r.ok?"#00ff88":"#ff3860";$("gstat2").style.background=ST.and?"#00ff88":"#ff3860";$("gstat2").textContent="android: "+(ST.and?"online":"missing");
+  $("gdot2").style.background=ST.and?"#00ff88":"#ff3860";$("gstat2").textContent="android: "+(ST.and?"online":"missing");
   syncDot();
  });
 }
