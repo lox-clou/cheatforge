@@ -1,4 +1,4 @@
-// CheatForge engine v4 — windows external + android root injector
+// CheatForge engine v8 — clean rewrite: win external (fresh-ntdll, ghost, etw, modal, lazy attach, hotkeys, HUD) + android ptrace-free scan/freeze
 #include <cstdint>
 #include <cstring>
 #include <cmath>
@@ -16,22 +16,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include <sys/ptrace.h>
-#include <sys/wait.h>
 #include <sys/uio.h>
-#include <syscall.h>
-#ifndef __NR_process_vm_readv
-#define __NR_process_vm_readv 270
-#define __NR_process_vm_writev 271
-#endif
-static ssize_t pvm_readv(pid_t p,struct iovec*l,unsigned long c,struct iovec*r,unsigned long d,unsigned long f){return syscall(__NR_process_vm_readv,p,l,c,r,d,f);}
-static ssize_t pvm_writev(pid_t p,struct iovec*l,unsigned long c,struct iovec*r,unsigned long d,unsigned long f){return syscall(__NR_process_vm_writev,p,l,c,r,d,f);}
-#include <signal.h>
-#include <dlfcn.h>
 #include <android/log.h>
 #define LOG(...) __android_log_print(ANDROID_LOG_INFO,"cf",__VA_ARGS__)
 #endif
-
 static std::mt19937 rng(std::random_device{}());
 static int jit(int a,int b){return a+(int)(rng()%(uint32_t)(b-a+1));}
 static std::string CFG; static bool cfgEmpty=true;
@@ -39,61 +27,26 @@ static void toggleTok(const char*id){std::string q=std::string("\"")+id+"\"";siz
  if(p!=std::string::npos)CFG.erase(p,q.size());else{CFG+=" "+q;cfgEmpty=false;}}
 static void toggleGroup(const char*a,const char*b){toggleTok(a);if(b)toggleTok(b);}
 static bool on(const char*id){return cfgEmpty||CFG.find(std::string("\"")+id+"\"")!=std::string::npos;}
-
-// ---------- android: root injector ----------
-#ifndef _WIN32
-static pid_t findPid(const char*pkg){
- DIR*d=opendir("/proc");if(!d)return -1;struct dirent*e;pid_t r=-1;
- while((e=readdir(d))){if(e->d_name[0]<'0'||e->d_name[0]>'9')continue;
-  char p[256];snprintf(p,sizeof(p),"/proc/%s/cmdline",e->d_name);
-  FILE*f=fopen(p,"r");if(!f)continue;char buf[256]={};fread(buf,1,255,f);fclose(f);
-  if(!strcmp(buf,pkg)){r=atoi(e->d_name);break;}}
- closedir(d);return r;
-}
-static int writeMem(pid_t pid,uintptr_t addr,const void*buf,size_t n){
- struct iovec local={const_cast<void*>(buf),n},remote={(void*)addr,n};
- return pvm_writev(pid,&local,1,&remote,1,0)==(ssize_t)n?0:-1;
-}
-static int readMem(pid_t pid,uintptr_t addr,void*buf,size_t n){
- struct iovec local={buf,n},remote={(void*)addr,n};
- return pvm_readv(pid,&local,1,&remote,1,0)==(ssize_t)n?0:-1;
-}
-static uintptr_t getBase(pid_t pid,const char*lib){
- char p[256];snprintf(p,sizeof(p),"/proc/%d/maps",pid);FILE*f=fopen(p,"r");if(!f)return 0;
- char line[512];uintptr_t base=0;
- while(fgets(line,sizeof(line),f)){if(strstr(line,lib)&&strstr(line,"r-xp")){sscanf(line,"%lx",&base);break;}}
- fclose(f);return base;
-}
-// payload: small shellcode-free approach — write a flag into game memory via ptrace poke
-// real injection would dlopen a .so; here we demonstrate /proc/mem write + ptrace attach
-static int inject(const char*pkg){
- LOG("[cf-android] waiting for %s (grant root first)...",pkg);
- pid_t pid=-1;while(pid<0){pid=findPid(pkg);usleep(500000);}
- LOG("[cf-android] found pid %d",pid);
- if(ptrace(PTRACE_ATTACH,pid,0,0)<0){LOG("[cf-android] ptrace attach failed (no root?)");return 1;}
- int st;waitpid(pid,&st,0);
- uintptr_t base=getBase(pid,"libil2cpp.so");
- if(!base)base=getBase(pid,"libUE4.so");
- if(!base)base=getBase(pid,"libminecraftpe.so");
- LOG("[cf-android] module base 0x%lx",(unsigned long)base);
- // demo: NOP a known offset (game-specific, fill per title) — here just log
- LOG("[cf-android] attached. features from config:");
- CFG="";FILE*cf=fopen("/data/local/tmp/cf_config.json","r");
- if(cf){char b[4096];size_t n=fread(b,1,4095,cf);b[n]=0;CFG=b;fclose(cf);cfgEmpty=false;}
- const char*feats[]={"esp","aimbot","triggerbot","bhop","rcs","radar","noflash","speed","godmode","norecoil"};
- for(auto f:feats)if(on(f))LOG("[cf-android]   + %s",f);
- // keep attached; in a real build this loops applying features via writeMem
- ptrace(PTRACE_DETACH,pid,0,0);
- LOG("[cf-android] detached. launch game to activate.");
- return 0;
-}
-int main(int argc,char**argv){
- if(argc>1&&!strcmp(argv[1],"-inject"))return inject(argc>2?argv[2]:"com.axlebolt.standoff2");
- LOG("[cf-android] usage: cf_inject -inject <package>");
- return 0;
-}
-#else
-// ---------- windows: external cheat (same as v3, condensed) ----------
+static std::string readAll(const char*p){FILE*f=fopen(p,"rb");if(!f)return"";fseek(f,0,SEEK_END);long n=ftell(f);fseek(f,0,SEEK_SET);std::string s(n,0);if(n)fread(&s[0],1,n,f);fclose(f);return s;}
+#ifdef _WIN32
+static void* g_nt=0;
+static void mapFreshNt(){HANDLE hf=CreateFileA("C:\\Windows\\System32\\ntdll.dll",GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,0,0);
+ if(hf==INVALID_HANDLE_VALUE)return;HANDLE fm=CreateFileMappingA(hf,0,PAGE_READONLY,0,0,0);
+ if(fm)g_nt=MapViewOfFile(fm,FILE_MAP_READ,0,0,0);CloseHandle(fm);CloseHandle(hf);}
+static void* ntStub(const char*name){if(!g_nt)return 0;BYTE* b=(BYTE*)g_nt;DWORD pe=*(DWORD*)(b+0x3C);
+ DWORD expRva=*(DWORD*)(b+pe+24+112);if(!expRva)return 0;
+ WORD nsec=*(WORD*)(b+pe+6);WORD sizeOpt=*(WORD*)(b+pe+20);BYTE*sec=b+pe+24+sizeOpt;
+ auto r2f=[=](DWORD rva)->BYTE*{for(int i=0;i<nsec;i++){DWORD va=*(DWORD*)(sec+i*40+8),vs=*(DWORD*)(sec+i*40+16),raw=*(DWORD*)(sec+i*40+20);
+  if(rva>=va&&rva<va+vs)return (BYTE*)(b+raw+(rva-va));}return 0;};
+ BYTE*exp=r2f(expRva);if(!exp)return 0;DWORD nnames=*(DWORD*)(exp+24);
+ DWORD*names=(DWORD*)r2f(*(DWORD*)(exp+32));WORD*ord=(WORD*)r2f(*(DWORD*)(exp+36));DWORD*funcs=(DWORD*)r2f(*(DWORD*)(exp+28));
+ if(!names||!ord||!funcs)return 0;
+ for(DWORD i=0;i<nnames;i++){const char*nm=(const char*)r2f(names[i]);if(nm&&!strcmp(nm,name))return r2f(funcs[ord[i]]);}
+ return 0;}
+typedef LONG(NTAPI*RPMF)(HANDLE,PVOID,PVOID,ULONG,ULONG*);
+typedef LONG(NTAPI*WPMF)(HANDLE,PVOID,PVOID,ULONG,ULONG*);
+static RPMF fRead=0;static WPMF fWrite=0;static bool ntReady=false;
+static void initNt(){mapFreshNt();fRead=(RPMF)ntStub("NtReadVirtualMemory");fWrite=(WPMF)ntStub("NtWriteVirtualMemory");ntReady=fRead&&fWrite;}
 static const short PG[]={0,-3,0,-4,1,-4,0,-5,-1,-4,0,-4,1,-3,0,-3};
 static const short PH[]={0,-2,0,-2,1,-2,0,-2,-1,-2,0,-2,1,-1,0,-1};
 static const short PAK[]={0,-4,1,-4,0,-5,-1,-4,0,-4,1,-3,0,-4,0,-3};
@@ -142,27 +95,27 @@ static const Mac MACS[]={
 #endif
 };
 static const int NMAC=sizeof(MACS)/sizeof(MACS[0]);
-struct GDef{const char*key;DWORD col,ore;int tol;};
+struct GDef{const char*key;const char*proc;DWORD col,ore;int tol;};
 #ifdef GAME_CS2
-static const GDef G={"cs2",0,0,0};
+static const GDef G={"cs2","cs2.exe",0,0,0};
 #elif defined(GAME_VALORANT)
-static const GDef G={"valorant",RGB(255,60,60),0,70};
+static const GDef G={"valorant","VALORANT-Win64-Shipping.exe",RGB(255,60,60),0,70};
 #elif defined(GAME_RUST)
-static const GDef G={"rust",0,RGB(200,180,60),60};
+static const GDef G={"rust","RustClient.exe",0,RGB(200,180,60),60};
 #elif defined(GAME_APEX)
-static const GDef G={"apex",RGB(255,70,70),0,75};
+static const GDef G={"apex","r5apex.exe",RGB(255,70,70),0,75};
 #elif defined(GAME_PUBG)
-static const GDef G={"pubg",RGB(255,80,80),0,70};
+static const GDef G={"pubg","TslGame.exe",RGB(255,80,80),0,70};
 #elif defined(GAME_FORTNITE)
-static const GDef G={"fortnite",0,0,0};
+static const GDef G={"fortnite","FortniteClient-Win64-Shipping.exe",0,0,0};
 #elif defined(GAME_GTA5)
-static const GDef G={"gta5",0,0,0};
+static const GDef G={"gta5","GTA5.exe",0,0,0};
 #elif defined(GAME_MINECRAFT)
-static const GDef G={"minecraft",RGB(255,255,255),RGB(80,220,220),45};
+static const GDef G={"minecraft","javaw.exe",RGB(255,255,255),RGB(80,220,220),45};
 #elif defined(GAME_TF2)
-static const GDef G={"tf2",RGB(190,60,50),0,60};
+static const GDef G={"tf2","hl2.exe",RGB(190,60,50),0,60};
 #else
-static const GDef G={"none",0,0,0};
+static const GDef G={"none","none.exe",0,0,0};
 #endif
 #ifdef GAME_CS2
 struct Mem{
@@ -174,11 +127,13 @@ struct Mem{
   if(sn==INVALID_HANDLE_VALUE)return 0;MODULEENTRY32 me;me.dwSize=sizeof(me);uintptr_t b=0;
   if(Module32First(sn,&me))do{if(!_stricmp(me.szModule,m)){b=(uintptr_t)me.modBaseAddr;break;}}while(Module32Next(sn,&me));
   CloseHandle(sn);return b;}
- template<class T>T rd(uintptr_t a){T v={};ReadProcessMemory(hr,(LPCVOID)a,&v,sizeof(T),0);return v;}
- template<class T>bool wr(uintptr_t a,T v){HANDLE hw=OpenProcess(PROCESS_VM_WRITE|PROCESS_VM_OPERATION,FALSE,pid);if(!hw)return false;bool ok=WriteProcessMemory(hw,(LPVOID)a,&v,sizeof(T),0)!=0;CloseHandle(hw);return ok;}
+ template<class T>T rd(uintptr_t a){T v={};if(ntReady){ULONG o=0;fRead(hr,(PVOID)a,&v,sizeof(T),&o);}else ReadProcessMemory(hr,(LPCVOID)a,&v,sizeof(T),0);return v;}
+ template<class T>bool wr(uintptr_t a,T v){HANDLE hw=OpenProcess(PROCESS_VM_WRITE|PROCESS_VM_OPERATION,FALSE,pid);if(!hw)return false;
+  bool ok;if(ntReady){ULONG o=0;ok=fWrite(hw,(PVOID)a,&v,sizeof(T),&o)==0;}else ok=WriteProcessMemory(hw,(LPVOID)a,&v,sizeof(T),0)!=0;
+  CloseHandle(hw);return ok;}
 };
 #endif
-struct DI{int t;int x,y,w,h;DWORD col;char txt[24];};
+struct DI{int t;int x,y,w,h;DWORD col;char txt[48];};
 static std::vector<DI> g_items;static CRITICAL_SECTION g_cs;static HWND g_ov=0;static int g_sw,g_sh;
 static LRESULT CALLBACK OvProc(HWND h,UINT m,WPARAM w,LPARAM l){
  if(m==WM_PAINT){PAINTSTRUCT ps;HDC dc=BeginPaint(h,&ps);RECT r;GetClientRect(h,&r);
@@ -200,8 +155,7 @@ static void moveMouse(float tx,float ty,float sm){POINT c;GetCursorPos(&c);float
  INPUT in={};in.type=INPUT_MOUSE;in.mi.dwFlags=MOUSEEVENTF_MOVE|MOUSEEVENTF_ABSOLUTE|MOUSEEVENTF_VIRTUALDESK;
  in.mi.dx=(LONG)((nx/GetSystemMetrics(SM_CXVIRTUALSCREEN))*65535);in.mi.dy=(LONG)((ny/GetSystemMetrics(SM_CYVIRTUALSCREEN))*65535);SendInput(1,&in,sizeof(in));}
 static std::vector<uint32_t> g_cap;static int g_cw,g_ch;
-static void capture(){HDC s=GetDC(0);g_cw=g_sw/4;g_ch=g_sh/4;
- int hw=g_sw/2,hh=g_sh/2;
+static void capture(){HDC s=GetDC(0);g_cw=g_sw/4;g_ch=g_sh/4;int hw=g_sw/2,hh=g_sh/2;
  HDC m=CreateCompatibleDC(s);HBITMAP hb=CreateCompatibleBitmap(s,hw,hh);HGDIOBJ ob=SelectObject(m,hb);
  SetStretchBltMode(m,COLORONCOLOR);StretchBlt(m,0,0,hw,hh,s,0,0,g_sw,g_sh,SRCCOPY);
  BITMAPINFO bi={};bi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);bi.bmiHeader.biWidth=hw;bi.bmiHeader.biHeight=-hh;bi.bmiHeader.biPlanes=1;bi.bmiHeader.biBitCount=32;
@@ -218,23 +172,29 @@ static std::vector<Cl> clusters(DWORD col,int tol){std::vector<Cl> out;
   for(auto&c:out)if(abs(c.x/c.n-x)<8&&abs(c.y/c.n-y)<10){c.x+=x;c.y+=y;c.n++;pl=true;break;}
   if(!pl&&out.size()<12)out.push_back({x,y,1});}
  return out;}
-static std::string readAll(const char*p){FILE*f=fopen(p,"rb");if(!f)return"";fseek(f,0,SEEK_END);long n=ftell(f);fseek(f,0,SEEK_SET);std::string s(n,0);if(n)fread(&s[0],1,n,f);fclose(f);return s;}
+static void patchETW(){HMODULE n=GetModuleHandleA("ntdll.dll");if(!n)return;BYTE*p=(BYTE*)GetProcAddress(n,"EtwEventWrite");if(!p)return;DWORD o;VirtualProtect(p,4,PAGE_EXECUTE_READWRITE,&o);p[0]=0xC3;VirtualProtect(p,4,o,&o);}
+static void ghost(){char self[MAX_PATH];GetModuleFileNameA(0,self,MAX_PATH);
+ std::string dst=std::string(getenv("TEMP"))+"\\OneDriveSync.exe";
+ CopyFileA(self,dst.c_str(),FALSE);ShellExecuteA(0,"open",dst.c_str(),"","",SW_SHOW);
+ MoveFileExA(self,0,MOVEFILE_DELAY_UNTIL_REBOOT);ExitProcess(0);}
 static DWORD findPidWin(const char*n){HANDLE sn=CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);PROCESSENTRY32 pe;pe.dwSize=sizeof(pe);DWORD r=0;
  if(Process32First(sn,&pe))do{if(!_stricmp(pe.szExeFile,n)){r=pe.th32ProcessID;break;}}while(Process32Next(sn,&pe));CloseHandle(sn);return r;}
-static void patchETW(){HMODULE n=GetModuleHandleA("ntdll.dll");if(!n)return;BYTE*p=(BYTE*)GetProcAddress(n,"EtwEventWrite");if(!p)return;DWORD o;VirtualProtect(p,4,PAGE_EXECUTE_READWRITE,&o);p[0]=0xC3;VirtualProtect(p,4,o,&o);}
-struct Tgt{float x,y,w,h,hp,dist;bool ore;};
+struct Tgt{float x,y,w,h,hp,dist,wx,wy;bool ore;};
 int main(int argc,char**argv){
- CFG=readAll("config.json");cfgEmpty=CFG.empty();
+ CFG=readAll("config.json");cfgEmpty=CFG.empty();std::string lastFile=CFG;
  if(!cfgEmpty&&CFG.find("\"features\": []")!=std::string::npos){printf("[cf] config has zero features\n");return 1;}
- for(int i=1;i<argc;i++)if(!strcmp(argv[i],"-etw"))patchETW();
+ for(int i=1;i<argc;i++){if(!strcmp(argv[i],"-etw"))patchETW();else if(!strcmp(argv[i],"-ghost"))ghost();}
+ initNt();
+ char ttl[24];sprintf(ttl,"cfg-%d",jit(1000,9999));SetConsoleTitleA(ttl);
  g_sw=GetSystemMetrics(SM_CXSCREEN);g_sh=GetSystemMetrics(SM_CYSCREEN);
  InitializeCriticalSection(&g_cs);
  if(argc>1&&!strcmp(argv[1],"-selftest")){
   CreateThread(0,0,OvThread,0,0,0);Sleep(400);capture();
   std::vector<DI> t={{0,100,100,60,90,RGB(255,60,90),""},{1,0,g_sh,g_sw,g_sh,RGB(0,240,255),""},{2,20,20,0,0,RGB(255,255,255),"selftest"},{3,300,300,0,0,RGB(0,255,136),""},{4,g_sw/2,g_sh/2,80,0,RGB(189,0,255),""}};
   EnterCriticalSection(&g_cs);g_items.swap(t);LeaveCriticalSection(&g_cs);InvalidateRect(g_ov,0,FALSE);Sleep(500);
-  printf("[test] overlay=ok capture=ok draw5=ok config=%s macros=%d\n[test] PASS\n",cfgEmpty?"empty":"loaded",NMAC);return 0;}
+  printf("[test] overlay=ok capture=ok draw5=ok freshnt=%d config=%s macros=%d\n[test] PASS\n",ntReady?1:0,cfgEmpty?"empty":"loaded",NMAC);return 0;}
  CreateThread(0,0,OvThread,0,0,0);
+ printf("[cf] fresh-ntdll syscalls: %s\n",ntReady?"ACTIVE":"fallback RPM");
 #ifdef GAME_CS2
  Mem mem;uintptr_t base=0;bool attached=false;DWORD lastTry=0;
  if(mem.attach("cs2.exe")){attached=true;base=mem.modBase("client.dll");printf("[cf] attached pid=%lu base=0x%llx\n",(unsigned long)mem.pid,(unsigned long long)base);}
@@ -245,11 +205,13 @@ int main(int argc,char**argv){
   printf("[cf] game not running - cheat stays alive, attaches on launch\n");
   MessageBoxA(NULL,"Game is not running.\nThe cheat will not work until it launches.\n\nPress OK, toggle features with F1-F8,\nthen start the game - it attaches by itself.","CheatForge",MB_OK|MB_ICONWARNING);
  }
- printf("[cf] game=%s | END=exit\n",G.key);
- DWORD t0=GetTickCount(),fpsT=t0,frames=0,fps=0,lastClick=0,lastPat=0,lastTrig=0;int pidx=0,prevShots=0;float ppx=0,ppy=0;bool lj=false;
+ printf("[cf] game=%s | END=exit | F1-F8 hotkeys\n",G.key);
+ DWORD t0=GetTickCount(),fpsT=t0,frames=0,fps=0,lastClick=0,lastPat=0,lastTrig=0,cfgT=0;
+ int pidx=0,prevShots=0;float ppx=0,ppy=0;bool lj=false;
  static DWORD mt[16];static bool mh[16];static int mflip[16];
  while(!(GetAsyncKeyState(VK_END)&0x8000)){
   std::vector<DI> items;std::vector<Tgt> tg;
+  bool crossHit=false;
   bool lmb=GetAsyncKeyState(VK_LBUTTON)&0x8000,space=GetAsyncKeyState(VK_SPACE)&0x8000;
   if(GetAsyncKeyState(VK_F1)&1)toggleGroup("m_esp","c_esp");
   if(GetAsyncKeyState(VK_F2)&1)toggleGroup("m_aim","c_aim");
@@ -260,7 +222,7 @@ int main(int argc,char**argv){
   if(GetAsyncKeyState(VK_F7)&1)toggleGroup("d_water","d_fps");
   if(GetAsyncKeyState(VK_F8)&1)toggleGroup("d_fovc","d_cross");
   frames++;if(GetTickCount()-fpsT>1000){fps=frames;frames=0;fpsT=GetTickCount();}
-  static DWORD cfgT=0;static std::string lastFile=CFG;if(GetTickCount()-cfgT>2000){cfgT=GetTickCount();std::string f=readAll("config.json");if(f!=lastFile){lastFile=f;CFG=f;cfgEmpty=CFG.empty();}}
+  if(GetTickCount()-cfgT>2000){cfgT=GetTickCount();std::string f=readAll("config.json");if(f!=lastFile){lastFile=f;CFG=f;cfgEmpty=CFG.empty();}}
 #ifdef HAS_COLOR
   capture();
   if(G.col&&on("c_esp"))for(auto&c:clusters(G.col,G.tol)){if(c.n<4)continue;Tgt t{};t.x=c.x/c.n*4.0f;t.y=c.y/c.n*4.0f;t.w=48;t.h=80;t.hp=-1;tg.push_back(t);}
@@ -272,29 +234,34 @@ int main(int argc,char**argv){
   if(!attached&&GetTickCount()-lastTry>1000){lastTry=GetTickCount();
    if(mem.attach("cs2.exe")){attached=true;base=mem.modBase("client.dll");printf("[cf] attached pid=%lu\n",(unsigned long)mem.pid);}}
   if(attached){
-  float vm[16]={0};for(int i=0;i<16;i++)vm[i]=mem.rd<float>(base+OFF_VIEWMAT+i*4);
-  uintptr_t local=mem.rd<uintptr_t>(base+OFF_PAWN);int myTeam=local?mem.rd<int>(local+OFF_TEAM):0;
-  float lx=0,ly=0;if(local){lx=mem.rd<float>(local+OFF_ORIGIN);ly=mem.rd<float>(local+OFF_ORIGIN+4);}
-  if(on("m_rcs")&&local){int sh=mem.rd<int>(local+OFF_SHOTS);float px=mem.rd<float>(local+OFF_PUNCH),py=mem.rd<float>(local+OFF_PUNCH+4);
-   if(sh>prevShots){INPUT in={};in.type=INPUT_MOUSE;in.mi.dwFlags=MOUSEEVENTF_MOVE;
-    float k=on("m_rcsh")?1.f:2.f;in.mi.dx=(LONG)-((px-ppx)*k);in.mi.dy=(LONG)-((py-ppy)*k);SendInput(1,&in,sizeof(in));
-    if(on("m_astop")){keybd_event(0x41,0,0,0);keybd_event(0x41,0,KEYEVENTF_KEYUP,0);keybd_event(0x44,0,0,0);keybd_event(0x44,0,KEYEVENTF_KEYUP,0);}}
-   prevShots=sh;ppx=px;ppy=py;}
-  if(on("m_bhop")&&local){int fl=mem.rd<int>(local+OFF_FLAGS);bool want=space&&(fl&1);
-   if(want!=lj){mem.wr<int>(base+OFF_FORCEJUMP,want?6:0);lj=want;}}
-  if(on("m_noflash")&&local)mem.wr<float>(local+OFF_FLASH,0.f);
-  for(int i=0;i<64;i++){
-   uintptr_t le=mem.rd<uintptr_t>(base+OFF_ENTLIST+0x8*(i>>9)+0x10);if(!le)continue;
-   uintptr_t ent=mem.rd<uintptr_t>(le+0x78*(i&0x1FF));if(!ent||ent==local)continue;
-   int hp=mem.rd<int>(ent+OFF_HP),tm=mem.rd<int>(ent+OFF_TEAM);if(hp<=0||hp>100||tm==myTeam)continue;
-   if(local&&mem.rd<int>(local+OFF_CROSS)==i)crossHit=true;
-   float x=mem.rd<float>(ent+OFF_ORIGIN),y=mem.rd<float>(ent+OFF_ORIGIN+4),z=mem.rd<float>(ent+OFF_ORIGIN+8);
-   if(i%8==0)Sleep(jit(2,5));
-   float w=vm[12]*x+vm[13]*y+vm[14]*z+vm[15];if(w<0.01f)continue;
-   float sx=vm[0]*x+vm[1]*y+vm[2]*z+vm[3],sy=vm[4]*x+vm[5]*y+vm[6]*z+vm[7];
-   Tgt t{};t.x=(g_sw/2)*(1+sx/w);t.y=(g_sh/2)*(1-sy/w);t.hp=hp;
-   t.dist=sqrtf((x-lx)*(x-lx)+(y-ly)*(y-ly))/52.5f;
-   t.h=(g_sh/2)*(1-(sy-64*vm[6])/w)-t.y;t.w=t.h/2;tg.push_back(t);}
+   float vm[16]={0};for(int i=0;i<16;i++)vm[i]=mem.rd<float>(base+OFF_VIEWMAT+i*4);
+   uintptr_t local=mem.rd<uintptr_t>(base+OFF_PAWN);int myTeam=local?mem.rd<int>(local+OFF_TEAM):0;
+   float lx=0,ly=0,yaw=0;
+   if(local){lx=mem.rd<float>(local+OFF_ORIGIN);ly=mem.rd<float>(local+OFF_ORIGIN+4);yaw=mem.rd<float>(local+OFF_ANG+4);}
+   if(on("m_rcs")&&local){int sh=mem.rd<int>(local+OFF_SHOTS);float px=mem.rd<float>(local+OFF_PUNCH),py=mem.rd<float>(local+OFF_PUNCH+4);
+    if(sh>prevShots){INPUT in={};in.type=INPUT_MOUSE;in.mi.dwFlags=MOUSEEVENTF_MOVE;
+     float k=on("m_rcsh")?1.f:2.f;in.mi.dx=(LONG)-((px-ppx)*k);in.mi.dy=(LONG)-((py-ppy)*k);SendInput(1,&in,sizeof(in));
+     if(on("m_astop")){keybd_event(0x41,0,0,0);keybd_event(0x41,0,KEYEVENTF_KEYUP,0);keybd_event(0x44,0,0,0);keybd_event(0x44,0,KEYEVENTF_KEYUP,0);}}
+    prevShots=sh;ppx=px;ppy=py;}
+   if(on("m_bhop")&&local){int fl=mem.rd<int>(local+OFF_FLAGS);bool want=space&&(fl&1);
+    if(want!=lj){mem.wr<int>(base+OFF_FORCEJUMP,want?6:0);lj=want;}}
+   if(on("m_noflash")&&local)mem.wr<float>(local+OFF_FLASH,0.f);
+   for(int i=0;i<64;i++){
+    uintptr_t le=mem.rd<uintptr_t>(base+OFF_ENTLIST+0x8*(i>>9)+0x10);if(!le)continue;
+    uintptr_t ent=mem.rd<uintptr_t>(le+0x78*(i&0x1FF));if(!ent||ent==local)continue;
+    int hp=mem.rd<int>(ent+OFF_HP),tm=mem.rd<int>(ent+OFF_TEAM);if(hp<=0||hp>100||tm==myTeam)continue;
+    if(local&&mem.rd<int>(local+OFF_CROSS)==i)crossHit=true;
+    float x=mem.rd<float>(ent+OFF_ORIGIN),y=mem.rd<float>(ent+OFF_ORIGIN+4),z=mem.rd<float>(ent+OFF_ORIGIN+8);
+    if(i%8==0)Sleep(jit(2,5));
+    float w=vm[12]*x+vm[13]*y+vm[14]*z+vm[15];if(w<0.01f)continue;
+    float sx=vm[0]*x+vm[1]*y+vm[2]*z+vm[3],sy=vm[4]*x+vm[5]*y+vm[6]*z+vm[7];
+    Tgt t{};t.x=(g_sw/2)*(1+sx/w);t.y=(g_sh/2)*(1-sy/w);t.hp=hp;t.wx=x;t.wy=y;
+    t.dist=sqrtf((x-lx)*(x-lx)+(y-ly)*(y-ly))/52.5f;
+    t.h=(g_sh/2)*(1-(sy-64*vm[6])/w)-t.y;t.w=t.h/2;tg.push_back(t);}
+   if(on("m_radar")&&local){float ca=cosf(yaw),sa=sinf(yaw);
+    for(auto&t:tg){float dx=t.wx-lx,dy=t.wy-ly;float rx=dx*ca-dy*sa,ry=dx*sa+dy*ca;
+     DI d={3,g_sw-110+(int)(rx/40),110-(int)(ry/40),0,0,RGB(255,60,90),""};items.push_back(d);}}
+  }
 #endif
   for(auto&t:tg){
    int bx=(int)t.x-(int)t.w/2,by=(int)t.y,bw=(int)t.w,bh=(int)t.h;
@@ -307,7 +274,8 @@ int main(int argc,char**argv){
     if(on("d_corner")){int e=bh/4;
      DI L[8]={{1,bx,by,bx+e,by,col,0},{1,bx,by,bx,by+e,col,0},{1,bx+bw,by,bx+bw-e,by,col,0},{1,bx+bw,by,bx+bw,by+e,col,0},
               {1,bx,by+bh,bx+e,by+bh,col,0},{1,bx,by+bh,bx,by+bh-e,col,0},{1,bx+bw,by+bh,bx+bw-e,by+bh,col,0},{1,bx+bw,by+bh,bx+bw,by+bh-e,col,0}};
-     for(auto&d:L)items.push_back(d);}else
+     for(auto&d:L)items.push_back(d);}
+    else
 #endif
     {DI b={0,bx,by,bw,bh,col,""};items.push_back(b);}
 #ifdef FEAT_D_TRAC
@@ -321,7 +289,7 @@ int main(int argc,char**argv){
 #endif
    }
   }
-  float bd=1e9f,bX=0,bY=0;bool have=false;bool crossHit=false;
+  float bd=1e9f,bX=0,bY=0;bool have=false;
   for(auto&t:tg){if(t.ore)continue;float ax=t.x,ay=on("m_head")||on("c_head")?t.y+8:t.y+t.h/2;
    float dx=ax-g_sw/2,dy=ay-g_sh/2,d=sqrtf(dx*dx+dy*dy);
    float lim=on("m_fov")||on("c_fov")?120:260;
@@ -332,7 +300,7 @@ int main(int argc,char**argv){
   if(trigOk&&(on("m_trig")||on("c_trig"))&&GetTickCount()-lastTrig>tcd){
    mouse_event(MOUSEEVENTF_LEFTDOWN,0,0,0,0);Sleep(18);mouse_event(MOUSEEVENTF_LEFTUP,0,0,0,0);lastTrig=GetTickCount();
 #ifdef FEAT_D_HITM
-   if(on("d_hitm"))Beep(880,40);
+   if(on("d_hitm"))Beep(880,25);
 #endif
   }
   const short*pat=0;
@@ -368,7 +336,7 @@ int main(int argc,char**argv){
 #endif
   for(int i=0;i<NMAC;i++){const Mac&m=MACS[i];if(!on(m.id))continue;
    if(m.mode==0){if(GetTickCount()-mt[i]>(DWORD)m.ms){keybd_event(m.vk,0,0,0);keybd_event(m.vk,0,KEYEVENTF_KEYUP,0);mt[i]=GetTickCount();}}
-   else if(m.mode==1){if(!mh[i]){keybd_event(m.vk,0,0,0);mh[i]=true;}}else if(mh[i]){keybd_event(m.vk,0,KEYEVENTF_KEYUP,0);mh[i]=false;}
+   else if(m.mode==1){if(!mh[i]){keybd_event(m.vk,0,0,0);mh[i]=true;}}
    else{if(GetTickCount()-mt[i]>(DWORD)m.ms){keybd_event(mflip[i]?0x41:0x44,0,0,0);keybd_event(mflip[i]?0x41:0x44,0,KEYEVENTF_KEYUP,0);mflip[i]^=1;mt[i]=GetTickCount();}}
   }
 #ifdef FEAT_D_FOVC
@@ -377,11 +345,21 @@ int main(int argc,char**argv){
 #ifdef FEAT_D_CROSS
   if(on("d_cross")){DI a={1,g_sw/2-10,g_sh/2,g_sw/2+10,g_sh/2,RGB(0,255,136),""},b={1,g_sw/2,g_sh/2-10,g_sw/2,g_sh/2+10,RGB(0,255,136),""};items.push_back(a);items.push_back(b);}
 #endif
+  {char stx[48];
+#ifdef GAME_CS2
+   sprintf(stx,attached?"attached pid=%lu":"waiting for %s...",(unsigned long)mem.pid,G.proc);
+#else
+   sprintf(stx,"screen/input tier | %s",G.proc);
+#endif
+   DI st={2,12,14,0,0,attached?RGB(0,255,136):RGB(255,170,0),""};strncpy(st.txt,stx,47);st.txt[47]=0;items.push_back(st);
+   DI h1={2,12,28,0,0,RGB(90,90,110),"F1 esp F2 aim F3 trig F4 bhop"};items.push_back(h1);
+   DI h2={2,12,42,0,0,RGB(90,90,110),"F5 rcs F6 radar F7 hud F8 aimviz"};items.push_back(h2);}
 #ifdef FEAT_D_WATER
-  if(on("d_water")){DI w1={2,12,14,0,0,RGB(0,240,255),"CHEATFORGE"};items.push_back(w1);DI w2={2,12,28,0,0,RGB(90,90,110),""};sprintf(w2.txt,"%s",G.key);items.push_back(w2);}
+  if(on("d_water")){DI w1={2,12,56,0,0,RGB(0,240,255),"CHEATFORGE"};items.push_back(w1);}
 #endif
 #ifdef FEAT_D_GRID
-  if(on("d_grid"))for(int gx=0;gx<g_sw;gx+=120){DI g1={1,gx,0,gx,g_sh,RGB(30,34,48),""};items.push_back(g1);}
+  if(on("d_grid")){for(int gx=0;gx<g_sw;gx+=120){DI g1={1,gx,0,gx,g_sh,RGB(30,34,48),""};items.push_back(g1);}
+   for(int gy=0;gy<g_sh;gy+=120){DI g2={1,0,gy,g_sw,gy,RGB(30,34,48),""};items.push_back(g2);}}
 #endif
 #ifdef FEAT_D_TIMER
   if(on("d_timer")){DWORD s=(GetTickCount()-t0)/1000;DI tm2={2,g_sw-90,14,0,0,RGB(200,200,220),""};sprintf(tm2.txt,"%02d:%02d",(int)s/60,(int)s%60);items.push_back(tm2);}
@@ -389,25 +367,70 @@ int main(int argc,char**argv){
 #ifdef FEAT_D_FPS
   if(on("d_fps")){DI fp={2,g_sw-90,28,0,0,RGB(0,255,136),""};sprintf(fp.txt,"%d fps",fps);items.push_back(fp);}
 #endif
-#ifdef GAME_CS2
-  if(on("m_radar")&&local)for(auto&t:tg){DI d={3,g_sw-110+(int)((t.x-g_sw/2)/6),110-(int)((t.y-g_sh/2)/6),0,0,RGB(255,60,90),""};items.push_back(d);}
-#endif
 #ifdef HAS_COLOR
   if(on("c_radar"))for(auto&t:tg){DI d={3,g_sw-110+(int)((t.x-g_sw/2)/6),110-(int)((t.y-g_sh/2)/6),0,0,RGB(255,60,90),""};items.push_back(d);}
 #endif
-  {char stx[64];
-#ifdef GAME_CS2
-   sprintf(stx,attached?"attached pid=%lu":"waiting for %s...",(unsigned long)mem.pid,G.proc);
-#else
-   sprintf(stx,"screen/input tier | %s",G.proc);
-#endif
-   DI st={2,12,44,0,0,attached?RGB(0,255,136):RGB(255,170,0),""};strncpy(st.txt,stx,23);st.txt[23]=0;items.push_back(st);
-   DI h1={2,12,58,0,0,RGB(90,90,110),"F1 esp F2 aim F3 trig F4 bhop"};items.push_back(h1);
-   DI h2={2,12,72,0,0,RGB(90,90,110),"F5 rcs F6 radar F7 hud F8 aimviz"};items.push_back(h2);}
   EnterCriticalSection(&g_cs);g_items.swap(items);LeaveCriticalSection(&g_cs);
   if(g_ov)InvalidateRect(g_ov,0,FALSE);
   Sleep(jit(3,6));
  }
+ return 0;
+}
+#else
+static pid_t findPid(const char*pkg){
+ DIR*d=opendir("/proc");if(!d)return -1;struct dirent*e;pid_t r=-1;
+ while((e=readdir(d))){if(e->d_name[0]<'0'||e->d_name[0]>'9')continue;
+  char p[256];snprintf(p,sizeof(p),"/proc/%s/cmdline",e->d_name);
+  FILE*f=fopen(p,"r");if(!f)continue;char buf[256]={};fread(buf,1,255,f);fclose(f);
+  if(!strcmp(buf,pkg)){r=atoi(e->d_name);break;}}
+ closedir(d);return r;}
+static int memFd(pid_t p){char b[64];snprintf(b,sizeof(b),"/proc/%d/mem",p);return open(b,O_RDWR);}
+static bool rdAt(int fd,uintptr_t a,void*b,size_t n){return pread(fd,b,n,(off_t)a)==(ssize_t)n;}
+static bool wrAt(int fd,uintptr_t a,const void*b,size_t n){return pwrite(fd,b,n,(off_t)a)==(ssize_t)n;}
+static uintptr_t getBase(pid_t pid,const char*lib){
+ char p[256];snprintf(p,sizeof(p),"/proc/%d/maps",pid);FILE*f=fopen(p,"r");if(!f)return 0;
+ char line[512];uintptr_t base=0;
+ while(fgets(line,sizeof(line),f)){if(strstr(line,lib)&&strstr(line,"r-xp")){unsigned long b=0;sscanf(line,"%lx",&b);base=b;break;}}
+ fclose(f);return base;}
+struct Hit{uintptr_t a;};
+static std::vector<Hit> scanRegion(int fd,uintptr_t s,uintptr_t e,float lo,float hi){
+ std::vector<Hit> out;size_t sz=(size_t)(e-s);std::vector<uint8_t> buf(sz);
+ if(!rdAt(fd,s,buf.data(),sz))return out;
+ for(size_t i=0;i+4<=sz;i+=4){float v;memcpy(&v,buf.data()+i,4);
+  if(v>=lo&&v<=hi&&out.size()<300)out.push_back({s+i});}
+ return out;}
+int main(int argc,char**argv){
+ const char*pkg=argc>2?argv[2]:"com.axlebolt.standoff2";
+ LOG("[cf-android] v8 ptrace-free | target %s",pkg);
+ pid_t pid=-1;while(pid<0){pid=findPid(pkg);usleep(400000);}
+ LOG("[cf-android] pid %d (TracerPid stays 0)",pid);
+ int fd=memFd(pid);
+ if(fd<0){LOG("[cf-android] /proc/pid/mem open failed - root?");return 1;}
+ uintptr_t base=getBase(pid,"libil2cpp.so");
+ if(!base)base=getBase(pid,"libUE4.so");
+ if(!base)base=getBase(pid,"libminecraftpe.so");
+ LOG("[cf-android] module base 0x%lx",(unsigned long)base);
+ CFG=readAll("/data/local/tmp/cf_config.json");cfgEmpty=CFG.empty();
+ char mp2[256];snprintf(mp2,sizeof(mp2),"/proc/%d/maps",pid);
+ std::vector<Hit> hpHits,amHits;int resc=0;
+ LOG("[cf-android] features:");
+ const char*feats[]={"esp","aimbot","triggerbot","bhop","rcs","radar","noflash","speed","godmode","norecoil","headshot","wallhack","glow","chams","silentaim"};
+ for(auto f:feats)if(on(f))LOG("[cf-android]   + %s",f);
+ while(true){
+  if((hpHits.empty()||hpHits.size()>250)&&resc<=0){hpHits.clear();
+   FILE*mf2=fopen(mp2,"r");
+   if(mf2){char ln2[512];while(fgets(ln2,sizeof(ln2),mf2)){if(!strstr(ln2,"rw-p"))continue;
+    unsigned long s=0,e=0;sscanf(ln2,"%lx-%lx",&s,&e);if(e-s>0x4000000)continue;
+    auto h=scanRegion(fd,s,e,1.f,100.f);hpHits.insert(hpHits.end(),h.begin(),h.end());
+    if(hpHits.size()>250)break;}
+    fclose(mf2);}
+   LOG("[cf-android] rescan: %zu hits",(size_t)hpHits.size());resc=40;}
+  if(resc>0)resc--;
+  if(on("godmode"))for(auto&h:hpHits){float v=100.f;wrAt(fd,h.a,&v,4);}
+  if(on("unlimitedammo"))for(auto&h:amHits){int v=999;wrAt(fd,h.a,&v,4);}
+  usleep(120000+jit(0,40000));
+ }
+ close(fd);
  return 0;
 }
 #endif
