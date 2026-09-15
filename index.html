@@ -64,7 +64,7 @@ header{display:flex;align-items:center;gap:12px;padding:32px 16px 10px;border-bo
 .acc{display:flex;gap:7px;margin-left:6px}.acc span{cursor:pointer;font-size:12px;transition:transform .2s}.acc span:hover{transform:scale(1.5)}
 .dotwrap{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:10px;color:var(--dim)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}.dot.ok{background:var(--gr);box-shadow:0 0 12px var(--gr);animation:blink 2s infinite}.dot.bad{background:var(--rd);box-shadow:0 0 12px var(--rd)}
-main{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 24px - 56px)}
+main{display:grid;grid-template-columns:1fr 340px;gap:0;flex:1;min-height:0}
 .center{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line)}
 /* shelf */
 #shelfwrap{padding:12px 14px 4px;border-bottom:1px solid var(--line)}
@@ -144,6 +144,9 @@ main{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 24px
  .deploy{border-top:1px solid var(--line)}
  .dialbox svg{width:76px;height:76px}
 }
+#app{height:100vh;display:flex;flex-direction:column}
+.center{min-height:0}
+#padwrap{min-height:0}
 </style>
 </head>
 <body>
@@ -203,11 +206,11 @@ minecraft:{n:"Minecraft",proc:"javaw.exe",tier:"screen",mech:"screen+input tier:
 tf2:{n:"Team Fortress 2",proc:"hl2.exe",tier:"screen",mech:"screen+input tier: red team color = target.",f:"c_esp|Color ESP c_aim|Color aim c_head|Head bias c_smooth|Smooth c_fov|FOV limit c_trig|Triggerbot c_tdly|Trig delay c_radar|Screen radar "+D10+" i_rec|Recoil i_rech|Half i_bhop|Bhop i_strafe|Strafe i_tap|Tap i_crouch|Crouch i_jump|Jump i_rapid|Rapid"}
 };
 const AND={
-standoff2:{n:"Standoff 2",proc:"com.axlebolt.standoff2",tier:"root",mech:"root injector v2: ptrace-free /proc/mem + scan/freeze. CS2-equivalent set.",f:"esp|ESP aimbot|Aimbot triggerbot|Triggerbot bhop|Bhop rcs|No recoil radar|Radar noflash|No flash speed|Speed godmode|God mode headshot|Headshot wallhack|Wallhack glow|Glow chams|Chams distance|Distance healthbar|HP bars fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker watermark|Watermark rapidfire|Rapid fire burst|Burst autostop|Auto stop prediction|Prediction silentaim|Silent aim"},
-pubgm:{n:"PUBG Mobile",proc:"com.tencent.ig",tier:"root",mech:"root injector v2: ptrace-free /proc/mem.",f:"esp|ESP aimbot|Aimbot norecoil|No recoil speed|Speed godmode|God mode radar|Radar noflash|No flash magicbullet|Magic bullet distance|Distance healthbar|HP bars fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker rapidfire|Rapid fire autoloot|Auto loot"},
-freefire:{n:"Free Fire",proc:"com.dts.freefireth",tier:"root",mech:"root injector v2: ptrace-free /proc/mem.",f:"esp|ESP aimbot|Aimbot headshot|Headshot speed|Speed godmode|God mode radar|Radar antena|Antenna fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker rapidfire|Rapid fire autorevive|Auto revive"},
-codm:{n:"CoD Mobile",proc:"com.activision.callofduty.shooter",tier:"root",mech:"root injector v2: ptrace-free /proc/mem.",f:"esp|ESP aimbot|Aimbot norecoil|No recoil speed|Speed godmode|God mode radar|Radar fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker rapidfire|Rapid fire unlimitedammo|Unlimited ammo"},
-mcpe:{n:"Minecraft PE",proc:"com.mojang.minecraftpe",tier:"root",mech:"root injector v2: ptrace-free /proc/mem.",f:"xray|Xray fly|Fly killaura|Kill aura speed|Speed godmode|God mode reach|Reach esp|Entity ESP radar|Radar fovcircle|FOV circle crosshair|Crosshair hitmarker|Hitmarker"}
+standoff2:{n:"Standoff 2",proc:"com.axlebolt.standoff2",tier:"root",mech:"input-engine v3: root injects real /dev/input touch events. no ptrace, no memory writes - undetectable by memory scanners.",f:"rapid|Rapid fire recoil|No recoil jump|Auto jump combo|Combo tap"},
+pubgm:{n:"PUBG Mobile",proc:"com.tencent.ig",tier:"root",mech:"input-engine v3: real touch injection via /dev/input. recoil compensated by look-area swipe.",f:"rapid|Rapid fire recoil|No recoil jump|Auto jump combo|Combo tap"},
+freefire:{n:"Free Fire",proc:"com.dts.freefireth",tier:"root",mech:"input-engine v3: real touch injection via /dev/input.",f:"rapid|Rapid fire recoil|No recoil jump|Auto jump combo|Combo tap"},
+codm:{n:"CoD Mobile",proc:"com.activision.callofduty.shooter",tier:"root",mech:"input-engine v3: real touch injection via /dev/input.",f:"rapid|Rapid fire recoil|No recoil jump|Auto jump combo|Combo tap"},
+mcpe:{n:"Minecraft PE",proc:"com.mojang.minecraftpe",tier:"root",mech:"input-engine v3: auto-tap / auto-jump via /dev/input.",f:"rapid|Auto tap jump|Auto jump combo|Combo tap recoil|No recoil"}
 };
 let plat="win",cur="cs2",sel={};
 Object.keys(WIN).forEach(k=>sel[k]=new Set());Object.keys(AND).forEach(k=>sel[k]=new Set());

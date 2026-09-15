@@ -465,41 +465,57 @@ int main(int argc,char**argv){
  return 0;
 }
 #else
+#include <unistd.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <sys/ioctl.h>
+#include <linux/input.h>
+#include <android/log.h>
+#define LOG(...) __android_log_print(ANDROID_LOG_INFO,"cf",__VA_ARGS__)
 static pid_t findPid(const char*pkg){DIR*d=opendir("/proc");if(!d)return -1;struct dirent*e;pid_t r=-1;
  while((e=readdir(d))){if(e->d_name[0]<'0'||e->d_name[0]>'9')continue;char p[256];snprintf(p,sizeof(p),"/proc/%s/cmdline",e->d_name);
   FILE*f=fopen(p,"r");if(!f)continue;char buf[256]={};fread(buf,1,255,f);fclose(f);if(!strcmp(buf,pkg)){r=atoi(e->d_name);break;}}
  closedir(d);return r;}
-static int memFd(pid_t p){char b[64];snprintf(b,sizeof(b),"/proc/%d/mem",p);return open(b,O_RDWR);}
-static bool rdAt(int fd,uintptr_t a,void*b,size_t n){return pread(fd,b,n,(off_t)a)==(ssize_t)n;}
-static bool wrAt(int fd,uintptr_t a,const void*b,size_t n){return pwrite(fd,b,n,(off_t)a)==(ssize_t)n;}
-static uintptr_t getBase(pid_t pid,const char*lib){char p[256];snprintf(p,sizeof(p),"/proc/%d/maps",pid);FILE*f=fopen(p,"r");if(!f)return 0;
- char line[512];uintptr_t base=0;while(fgets(line,sizeof(line),f)){if(strstr(line,lib)&&strstr(line,"r-xp")){unsigned long b=0;sscanf(line,"%lx",&b);base=b;break;}}
- fclose(f);return base;}
-struct Hit{uintptr_t a;};
-static std::vector<Hit> scanRegion(int fd,uintptr_t s,uintptr_t e,float lo,float hi){std::vector<Hit> out;size_t sz=(size_t)(e-s);
- std::vector<uint8_t> buf(sz);if(!rdAt(fd,s,buf.data(),sz))return out;
- for(size_t i=0;i+4<=sz;i+=4){float v;memcpy(&v,buf.data()+i,4);if(v>=lo&&v<=hi&&out.size()<300)out.push_back({s+i});}return out;}
+static int g_touchfd=-1;
+static int openTouch(){for(int i=0;i<32;i++){char p[64];snprintf(p,sizeof(p),"/dev/input/event%d",i);
+  int fd=open(p,O_WRONLY|O_NONBLOCK);if(fd<0)continue;
+  unsigned long bits[6]={0};
+  if(ioctl(fd,EVIOCGBIT(EV_ABS,sizeof(bits)),bits)>=0){
+   if(bits[ABS_MT_POSITION_X/64]&(1UL<<(ABS_MT_POSITION_X%64)))return fd;}
+  close(fd);}
+ return -1;}
+static void ev(int t,int c,int v){struct input_event e={};e.type=t;e.code=c;e.value=v;write(g_touchfd,&e,sizeof(e));}
+static void syn(){ev(EV_SYN,SYN_REPORT,0);}
+static int trk=0;
+static void tDown(int x,int y){if(trk)return;trk=1;
+ ev(EV_ABS,ABS_MT_SLOT,0);ev(EV_ABS,ABS_MT_TRACKING_ID,1);ev(EV_ABS,ABS_MT_POSITION_X,x);ev(EV_ABS,ABS_MT_POSITION_Y,y);
+ ev(EV_KEY,BTN_TOUCH,1);ev(EV_KEY,BTN_TOOL_FINGER,1);syn();}
+static void tMove(int x,int y){if(!trk)return;ev(EV_ABS,ABS_MT_SLOT,0);ev(EV_ABS,ABS_MT_POSITION_X,x);ev(EV_ABS,ABS_MT_POSITION_Y,y);syn();}
+static void tUp(){if(!trk)return;ev(EV_ABS,ABS_MT_SLOT,0);ev(EV_ABS,ABS_MT_TRACKING_ID,-1);ev(EV_KEY,BTN_TOUCH,0);ev(EV_KEY,BTN_TOOL_FINGER,0);syn();trk=0;}
+static void tap(int x,int y){tDown(x,y);usleep(40000);tUp();usleep(20000);}
+static void screenSize(int&w,int&h){w=1080;h=2400;FILE*f=fopen("/sys/class/graphics/fb0/virtual_size","r");
+ if(f){int a,b;if(fscanf(f,"%d,%d",&a,&b)==2){w=a;h=b;}fclose(f);}}
 int main(int argc,char**argv){
  const char*pkg=argc>2?argv[2]:"com.axlebolt.standoff2";
- LOG("[cf-android] v10 ptrace-free | %s",pkg);
+ LOG("[cf-android] v3 input-engine | %s",pkg);
+ if(geteuid()!=0){LOG("[cf-android] NEED ROOT: run  su  then  sh inject.sh");return 1;}
+ g_touchfd=openTouch();
+ if(g_touchfd<0){LOG("[cf-android] no multitouch /dev/input device found");return 1;}
+ int W,H;screenSize(W,H);
+ LOG("[cf-android] screen %dx%d, touch fd=%d",W,H,g_touchfd);
  pid_t pid=-1;while(pid<0){pid=findPid(pkg);usleep(400000);}
- int fd=memFd(pid);if(fd<0){LOG("[cf-android] mem open fail - root?");return 1;}
- uintptr_t base=getBase(pid,"libil2cpp.so");if(!base)base=getBase(pid,"libUE4.so");if(!base)base=getBase(pid,"libminecraftpe.so");
- LOG("[cf-android] base 0x%lx",(unsigned long)base);
+ LOG("[cf-android] game pid=%d (no ptrace, no mem writes)",pid);
  CFG=readAll("/data/local/tmp/cf_config.json");cfgEmpty=CFG.empty();
- {const char* aids[]={"esp","aimbot","triggerbot","bhop","rcs","radar","noflash","speed","godmode","norecoil","headshot","wallhack","glow","chams","silentaim","unlimitedammo","xray","fly","killaura","reach"};
+ {const char*aids[]={"rapid","recoil","jump","combo"};
   for(auto a:aids)if(CFG.find(std::string("\"")+a+"\"")!=std::string::npos)g_selected.insert(a);}
- char mp2[256];snprintf(mp2,sizeof(mp2),"/proc/%d/maps",pid);
- std::vector<Hit> hpHits,amHits;int resc=0;
+ int fx=(int)(W*0.82),fy=(int)(H*0.62),jx=(int)(W*0.90),jy=(int)(H*0.80),lx=(int)(W*0.60);
+ LOG("[cf-android] rapid=%d recoil=%d jump=%d combo=%d",on("rapid"),on("recoil"),on("jump"),on("combo"));
+ LOG("[cf-android] macro loop live. ctrl-c stops.");
  while(true){
-  if((hpHits.empty()||hpHits.size()>250)&&resc<=0){hpHits.clear();FILE*mf2=fopen(mp2,"r");
-   if(mf2){char ln2[512];while(fgets(ln2,sizeof(ln2),mf2)){if(!strstr(ln2,"rw-p"))continue;
-    unsigned long s=0,e=0;sscanf(ln2,"%lx-%lx",&s,&e);if(e-s>0x4000000)continue;
-    auto h=scanRegion(fd,s,e,1.f,100.f);hpHits.insert(hpHits.end(),h.begin(),h.end());if(hpHits.size()>250)break;}fclose(mf2);}
-   LOG("[cf-android] rescan %zu",(size_t)hpHits.size());resc=40;}
-  if(resc>0)resc--;
-  if(on("godmode"))for(auto&h:hpHits){float v=100.f;wrAt(fd,h.a,&v,4);}
-  if(on("unlimitedammo"))for(auto&h:amHits){int v=999;wrAt(fd,h.a,&v,4);}
-  usleep(120000+jit(0,40000));}
- close(fd);return 0;}
+  if(on("rapid")||on("combo"))tap(fx,fy);
+  if(on("recoil")){int ly=(int)(H*0.50);tDown(lx,ly);
+   for(int k=0;k<5;k++){ly+=6;tMove(lx,ly);usleep(12000);}tUp();}
+  if(on("jump"))tap(jx,jy);
+  usleep(on("rapid")?50000:on("combo")?120000:on("jump")?300000:200000);}
+ close(g_touchfd);return 0;}
 #endif
