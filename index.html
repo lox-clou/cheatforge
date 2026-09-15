@@ -3,137 +3,167 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CheatForge // Foundry</title>
+<title>CheatForge // Cockpit</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
-:root{--bg:#04050a;--panel:rgba(13,15,23,.82);--line:#1a1e2c;--cy:#00f0ff;--mg:#bd00ff;--gr:#00ff88;--rd:#ff3860;--tx:#e3e8f4;--dim:#5a6178}
+:root{--bg:#04050a;--panel:#0b0e16;--line:#1a1e2c;--cy:#00f0ff;--mg:#bd00ff;--gr:#00ff88;--rd:#ff3860;--tx:#e3e8f4;--dim:#5a6178}
 *{margin:0;padding:0;box-sizing:border-box}::selection{background:var(--cy);color:#000}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#242b3f;border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--cy)}
-body{background:var(--bg);color:var(--tx);font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{height:6px;width:6px}::-webkit-scrollbar-thumb{background:#242b3f}::-webkit-scrollbar-thumb:hover{background:var(--cy)}
+body{background:var(--bg);color:var(--tx);font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;height:100vh;overflow:hidden}
 #cv{position:fixed;inset:0;z-index:-2}
-#glow{position:fixed;width:420px;height:420px;border-radius:50%;pointer-events:none;z-index:-1;background:radial-gradient(circle,rgba(0,240,255,.09),transparent 62%);transform:translate(-50%,-50%);transition:opacity .4s}
-.gridbg{position:fixed;inset:0;z-index:-1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 47px,rgba(255,255,255,.02) 47px 48px),repeating-linear-gradient(90deg,transparent 0 47px,rgba(255,255,255,.02) 47px 48px);animation:gridmove 24s linear infinite}
-@keyframes gridmove{to{background-position:48px 48px,48px 48px}}
-.scan{position:fixed;left:0;right:0;height:180px;z-index:0;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(0,240,255,.05),transparent);animation:scan 7s linear infinite}
-@keyframes scan{0%{top:-200px}100%{top:105vh}}
+.hexbg{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;background:
+ radial-gradient(circle at 50% 40%,rgba(0,240,255,.06),transparent 55%),
+ conic-gradient(from 30deg at 50% 50%,transparent 0 25%,rgba(255,255,255,.015) 25% 50%,transparent 50% 75%,rgba(255,255,255,.015) 75%);background-size:100% 100%,60px 104px;animation:hexdrift 30s linear infinite}
+@keyframes hexdrift{to{background-position:0 0,120px 208px}}
+.vig{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%)}
+.scan{position:fixed;left:0;right:0;height:140px;z-index:1;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(0,240,255,.05),transparent);animation:scan 6s linear infinite}
+@keyframes scan{0%{top:-160px}100%{top:105vh}}
 .hidden{display:none!important}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes slideL{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 @keyframes glitch{0%{text-shadow:3px 0 var(--mg),-3px 0 var(--cy)}50%{text-shadow:-3px 0 var(--mg),3px 0 var(--cy)}100%{text-shadow:none}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-@keyframes borderSpin{to{transform:rotate(360deg)}}
-.rev{animation:fadeUp .5s cubic-bezier(.2,.8,.2,1) both}
-.logo{font-size:46px;font-weight:900;letter-spacing:-2px;color:#fff;position:relative}
+.rev{animation:fadeUp .45s cubic-bezier(.2,.8,.2,1) both}
+.logo{font-size:40px;font-weight:900;letter-spacing:-2px;color:#fff}
 .logo span{background:linear-gradient(90deg,var(--cy),var(--mg),var(--cy));background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 4s linear infinite}
 .logo:hover{animation:glitch .3s steps(2) 2}
-.logo.small{font-size:17px}
+.logo.small{font-size:16px}
 #boot{position:fixed;inset:0;background:#000;z-index:60;padding:44px;font-size:12px;color:var(--gr);white-space:pre-wrap;line-height:1.9}
-#bootbar{position:absolute;left:44px;bottom:44px;width:280px;height:3px;background:#111;border-radius:2px;overflow:hidden}
+#bootbar{position:absolute;left:44px;bottom:44px;width:280px;height:3px;background:#111;overflow:hidden}
 #bootbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gr),var(--cy));transition:width .2s}
-#ticker{position:fixed;top:0;left:0;right:0;height:26px;overflow:hidden;background:rgba(4,5,10,.9);border-bottom:1px solid var(--line);z-index:40}
-#ticker div{display:inline-block;white-space:nowrap;font-size:10px;color:var(--dim);line-height:26px;animation:ticker 30s linear infinite}
+#ticker{position:fixed;top:0;left:0;right:0;height:24px;overflow:hidden;background:rgba(4,5,10,.92);border-bottom:1px solid var(--line);z-index:40}
+#ticker div{display:inline-block;white-space:nowrap;font-size:10px;color:var(--dim);line-height:24px;animation:ticker 32s linear infinite}
 #ticker b{color:var(--cy)}
-#gate{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;padding:60px 30px 40px}
-.sub{color:var(--dim);margin-top:10px;font-size:11px;letter-spacing:5px;text-transform:uppercase}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,430px));gap:24px;width:100%;max-width:940px}
-.pcard{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:32px;cursor:pointer;backdrop-filter:blur(16px);will-change:transform;transition:border-color .25s,box-shadow .25s;overflow:hidden;animation:pop .6s cubic-bezier(.2,.8,.2,1) both}
-.pcard:nth-child(2){animation-delay:.12s}
-.pcard:before{content:'';position:absolute;inset:0;background:radial-gradient(400px 200px at var(--mx,50%) var(--my,0%),rgba(0,240,255,.10),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
-.pcard:hover:before{opacity:1}
-.pcard:after{content:'';position:absolute;top:10px;left:10px;width:20px;height:20px;border-top:2px solid var(--cy);border-left:2px solid var(--cy);opacity:.8;transition:.25s}
-.pcard:hover:after{width:34px;height:34px}
-.pcard:hover{border-color:var(--cy);box-shadow:0 24px 70px rgba(0,240,255,.16)}
-.pcard.and:hover{border-color:var(--gr);box-shadow:0 24px 70px rgba(0,255,136,.14)}.pcard.and:after{border-color:var(--gr)}
-.pcard h3{font-size:27px}.pcard .os{color:var(--dim);font-size:10px;letter-spacing:3px;text-transform:uppercase;margin:6px 0 16px}
-.pcard ul{list-style:none;font-size:12px;color:#9aa3b8}.pcard li{padding:7px 0;border-bottom:1px dashed #171b28;display:flex;justify-content:space-between}
-.pcard li b{color:var(--cy)}.pcard.and li b{color:var(--gr)}
-.go{margin-top:18px;font-size:11px;letter-spacing:3px;color:var(--cy);transition:.2s}.pcard:hover .go{letter-spacing:5px}.pcard.and .go{color:var(--gr)}
-.gfoot{font-size:11px;color:var(--dim);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--dim);display:inline-block}
-.dot.ok{background:var(--gr);box-shadow:0 0 12px var(--gr);animation:blink 2s infinite}
-.dot.bad{background:var(--rd);box-shadow:0 0 12px var(--rd)}
-header{display:flex;align-items:center;gap:12px;padding:38px 18px 12px;border-bottom:1px solid var(--line);background:rgba(4,5,10,.85);backdrop-filter:blur(12px);position:sticky;top:26px;z-index:30;flex-wrap:wrap}
-#back{background:none;border:1px solid var(--line);color:var(--dim);padding:7px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:10px;transition:.2s}#back:hover{color:var(--cy);border-color:var(--cy)}
-.pill{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:5px 12px;border-radius:20px;border:1px solid var(--cy);color:var(--cy)}.pill.and{border-color:var(--gr);color:var(--gr)}
-.acc{display:flex;gap:7px}.acc span{cursor:pointer;font-size:12px;transition:transform .2s}.acc span:hover{transform:scale(1.4)}
+/* ===== SPLIT GATE ===== */
+#gate{display:flex;height:100vh;padding-top:24px}
+.slab{flex:1;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:flex .55s cubic-bezier(.7,0,.2,1);overflow:hidden}
+.slab.win{clip-path:polygon(0 0,100% 0,calc(100% - 9vw) 100%,0 100%);background:linear-gradient(155deg,#071420 0%,#04050a 70%)}
+.slab.and{clip-path:polygon(9vw 0,100% 0,100% 100%,0 100%);margin-left:-9vw;background:linear-gradient(205deg,#072012 0%,#04050a 70%)}
+.slab:hover{flex:1.8}
+.slab .inner{text-align:center;transform:rotate(0);transition:.4s;padding:20px}
+.slab:hover .inner{transform:scale(1.05)}
+.slab h2{font-size:52px;letter-spacing:-2px;font-weight:900}
+.slab.win h2{color:var(--cy)}.slab.and h2{color:var(--gr)}
+.slab .tag{font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;margin:8px 0 22px}
+.slab ul{list-style:none;font-size:12px;color:#9aa3b8;text-align:left;display:inline-block}
+.slab li{padding:6px 0;border-bottom:1px dashed #171b28;display:flex;gap:10px;justify-content:space-between;min-width:260px}
+.slab li b{color:var(--cy)}.slab.and li b{color:var(--gr)}
+.slab .go{margin-top:22px;font-size:12px;letter-spacing:4px;color:var(--cy);opacity:.6;transition:.3s}
+.slab.and .go{color:var(--gr)}
+.slab:hover .go{opacity:1;letter-spacing:6px}
+.slab .big{position:absolute;font-size:200px;font-weight:900;opacity:.04;pointer-events:none;bottom:-40px;right:0}
+/* ===== COCKPIT ===== */
+header{display:flex;align-items:center;gap:12px;padding:32px 16px 10px;border-bottom:1px solid var(--line);background:rgba(4,5,10,.85);backdrop-filter:blur(10px);position:relative;z-index:30}
+#back{background:none;border:1px solid var(--line);color:var(--dim);padding:6px 12px;cursor:pointer;font-family:inherit;font-size:10px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);transition:.2s}
+#back:hover{color:var(--cy);border-color:var(--cy)}
+.pill{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:5px 14px;border:1px solid var(--cy);color:var(--cy);clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}.pill.and{border-color:var(--gr);color:var(--gr)}
+.acc{display:flex;gap:7px;margin-left:6px}.acc span{cursor:pointer;font-size:12px;transition:transform .2s}.acc span:hover{transform:scale(1.5)}
 .dotwrap{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:10px;color:var(--dim)}
-main{display:grid;grid-template-columns:272px 1fr 344px;gap:14px;padding:16px;max-width:1560px;margin:0 auto}
-@media(max-width:1150px){main{grid-template-columns:1fr}}
-.rail,.stage,.console{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;backdrop-filter:blur(14px);position:relative}
-.console{overflow:hidden}
-.console:before{content:'';position:absolute;inset:-2px;border-radius:14px;background:conic-gradient(from 0deg,transparent 0 70%,var(--cy) 85%,transparent 100%);animation:borderSpin 5s linear infinite;z-index:-1;opacity:.5}
-h2{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:3px;margin-bottom:12px}
-.inp{width:100%;background:#0a0d15;border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:8px 10px;font-family:inherit;font-size:10px;margin-bottom:8px;outline:none;transition:.2s}.inp:focus{border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,240,255,.08)}
-.game{padding:9px 10px;margin:5px 0;background:#0d1019;border:1px solid var(--line);border-radius:8px;cursor:pointer;display:flex;gap:10px;align-items:center;transition:.18s}
-.game:hover{border-color:#2c3550;transform:translateX(4px)}
-.game.active{border-color:var(--cy);background:rgba(0,240,255,.06);box-shadow:inset 3px 0 0 var(--cy)}
-.game.and.active{border-color:var(--gr);background:rgba(0,255,136,.06);box-shadow:inset 3px 0 0 var(--gr)}
-.emblem{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#000;background:conic-gradient(from 45deg,var(--cy),var(--mg),var(--cy));transition:transform .3s}
-.game:hover .emblem{transform:rotate(90deg)}
-.game.and .emblem{background:conic-gradient(from 45deg,var(--gr),#00b3ff,var(--gr))}
-.game b{color:#fff;font-size:12px;display:block}.game small{display:block;color:var(--dim);font-size:9px}
-.badge{display:inline-block;font-size:8px;letter-spacing:1px;padding:2px 7px;border-radius:3px;margin-top:4px}
-.b-mem{background:rgba(0,240,255,.14);color:var(--cy)}.b-screen{background:rgba(189,0,255,.14);color:#d580ff}.b-input{background:rgba(0,255,136,.14);color:var(--gr)}.b-root{background:rgba(0,255,136,.14);color:var(--gr)}
-.bulk{display:flex;gap:6px;margin-bottom:8px}.bulk button{flex:1;background:#0d1019;border:1px solid var(--line);color:var(--dim);font-family:inherit;font-size:9px;padding:6px;border-radius:5px;cursor:pointer;transition:.2s}.bulk button:hover{color:var(--cy);border-color:var(--cy);transform:translateY(-1px)}
-.grouph{font-size:9px;letter-spacing:2px;color:var(--dim);margin:12px 0 7px;text-transform:uppercase;border-left:3px solid var(--mg);padding-left:8px}
-.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:8px}
-.feat{padding:10px;background:#0d1019;border:1px solid var(--line);border-radius:8px;cursor:pointer;position:relative;transition:.18s;overflow:hidden}
-.feat:hover{border-color:#2c3550;transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.4)}
-.feat.on{border-color:var(--cy);background:rgba(0,240,255,.08)}.feat.on.and{border-color:var(--gr);background:rgba(0,255,136,.08)}
-.feat.on:after{content:'\2713';position:absolute;top:6px;right:8px;font-weight:700;color:var(--cy);animation:pop .25s}.feat.on.and:after{color:var(--gr)}
-.feat b{font-size:11px;color:#fff;display:block}.feat small{color:var(--dim);font-size:8px}
-.warn{margin:10px 0;padding:9px;border:1px solid rgba(255,56,96,.4);border-radius:8px;background:rgba(255,56,96,.07);color:var(--rd);font-size:10px;display:none;animation:fadeUp .3s}.warn.show{display:block}
-.rootnote{margin:10px 0;padding:9px;border:1px solid rgba(0,255,136,.3);border-radius:8px;background:rgba(0,255,136,.06);color:var(--gr);font-size:10px;line-height:1.6}
-.mech{margin-top:12px;font-size:10px;color:var(--dim);line-height:1.7;border-top:1px dashed #171b28;padding-top:10px}
-.cntrow{font-size:11px;color:var(--dim);margin-bottom:8px}.cntrow b{color:var(--cy);font-size:18px}
-#cfgprev{background:#000;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:9px;height:112px;overflow:auto;white-space:pre-wrap;margin-bottom:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}.dot.ok{background:var(--gr);box-shadow:0 0 12px var(--gr);animation:blink 2s infinite}.dot.bad{background:var(--rd);box-shadow:0 0 12px var(--rd)}
+main{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 24px - 56px)}
+.center{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line)}
+/* shelf */
+#shelfwrap{padding:12px 14px 4px;border-bottom:1px solid var(--line)}
+#shelf{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 12px}
+.tile{flex:0 0 190px;background:var(--panel);border:1px solid var(--line);cursor:pointer;transform:skewX(-10deg);transition:.25s;position:relative}
+.tile .tin{transform:skewX(10deg);padding:10px 12px}
+.tile:hover{border-color:#2c3550;transform:skewX(-10deg) translateY(-3px)}
+.tile.on{border-color:var(--cy);background:rgba(0,240,255,.07);transform:skewX(0) scale(1.04);box-shadow:0 10px 30px rgba(0,240,255,.15)}
+.tile.on.and{border-color:var(--gr);background:rgba(0,255,136,.07)}
+.tile b{color:#fff;font-size:12px;display:block}.tile small{color:var(--dim);font-size:9px;display:block}
+.emblem{width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:9px;color:#000;background:conic-gradient(from 45deg,var(--cy),var(--mg),var(--cy));margin-bottom:6px;clip-path:polygon(20% 0,100% 0,80% 100%,0 100%)}
+.tile.and .emblem{background:conic-gradient(from 45deg,var(--gr),#00b3ff,var(--gr))}
+.badge{display:inline-block;font-size:8px;letter-spacing:1px;padding:2px 7px;margin-top:5px;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+.b-mem{background:rgba(0,240,255,.16);color:var(--cy)}.b-screen{background:rgba(189,0,255,.16);color:#d580ff}.b-input{background:rgba(0,255,136,.16);color:var(--gr)}.b-root{background:rgba(0,255,136,.16);color:var(--gr)}
+/* loadout */
+#loadhead{display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap}
+#loadhead h2{font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase}
+.inp{background:#0a0d15;border:1px solid var(--line);color:var(--tx);padding:6px 10px;font-family:inherit;font-size:10px;outline:none;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);transition:.2s}
+.inp:focus{border-color:var(--cy)}
+.bulk{display:flex;gap:5px;margin-left:auto}.bulk button{background:#0d1019;border:1px solid var(--line);color:var(--dim);font-family:inherit;font-size:9px;padding:5px 10px;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);transition:.2s}
+.bulk button:hover{color:var(--cy);border-color:var(--cy)}
+#padwrap{flex:1;overflow-y:auto;padding:4px 14px 14px}
+.grouph{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin:12px 0 8px;display:flex;align-items:center;gap:8px}
+.grouph:before{content:'';width:14px;height:2px;background:var(--mg)}
+#pad{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.cell{background:var(--panel);border:1px solid var(--line);cursor:pointer;padding:10px 8px;position:relative;transition:.18s;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);animation:pop .3s both;animation-delay:var(--d,0ms)}
+.cell:hover{border-color:#2c3550;transform:translateY(-2px)}
+.cell.on{border-color:var(--cy);background:rgba(0,240,255,.10);box-shadow:inset 0 0 20px rgba(0,240,255,.08)}
+.cell.on.and{border-color:var(--gr);background:rgba(0,255,136,.10)}
+.cell.on:after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-top:12px solid var(--cy);border-left:12px solid transparent}
+.cell.on.and:after{border-top-color:var(--gr)}
+.cell b{font-size:10px;color:#fff;display:block;line-height:1.3}
+.cell small{color:var(--dim);font-size:8px;display:block;margin-top:3px}
+.cell.on b{color:var(--cy)}.cell.on.and b{color:var(--gr)}
+.warn{margin:8px 14px;padding:8px;border:1px solid rgba(255,56,96,.4);background:rgba(255,56,96,.07);color:var(--rd);font-size:10px;display:none;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+.warn.show{display:block}
+.rootnote{margin:8px 14px;padding:8px;border:1px solid rgba(0,255,136,.3);background:rgba(0,255,136,.06);color:var(--gr);font-size:10px;line-height:1.5}
+.mech{padding:8px 14px;font-size:10px;color:var(--dim);border-top:1px solid var(--line);line-height:1.6}
+/* deploy */
+.deploy{display:flex;flex-direction:column;background:rgba(8,10,16,.7);backdrop-filter:blur(10px);padding:14px;gap:10px;overflow-y:auto}
+.dialbox{display:flex;align-items:center;gap:14px}
+.dialbox svg{flex-shrink:0}
+#dialt{font-size:20px;font-weight:800;color:var(--cy)}
+.dialbox .lbl{font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase}
+#cfgprev{background:#000;border:1px solid var(--line);padding:9px;font-size:9px;height:110px;overflow:auto;white-space:pre-wrap;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
 #cfgprev i{color:#7ee787;font-style:normal}#cfgprev b{color:#ffab70;font-weight:400}#cfgprev u{color:var(--cy);text-decoration:none}
-#prog{height:3px;background:#11151f;border-radius:2px;overflow:hidden}#prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cy),var(--mg),var(--cy));background-size:200%;animation:shimmer 1.5s linear infinite;transition:width .25s}
-#progpct{font-size:9px;color:#39405a;text-align:right;margin:2px 0 8px}
-.btn{width:100%;padding:14px;background:linear-gradient(90deg,var(--cy),var(--mg));border:0;border-radius:8px;color:#000;font-weight:800;font-size:11px;letter-spacing:3px;cursor:pointer;font-family:inherit;transition:.2s;box-shadow:0 10px 34px rgba(0,240,255,.28);position:relative;overflow:hidden}
-.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 14px 44px rgba(0,240,255,.45)}
+#prog{height:6px;background:#11151f;overflow:hidden;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)}
+#prog i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--cy) 0 6px,transparent 6px 9px);transition:width .25s}
+#progpct{font-size:9px;color:#39405a;text-align:right}
+.btn{width:100%;padding:14px;background:linear-gradient(90deg,var(--cy),var(--mg));border:0;color:#000;font-weight:800;font-size:11px;letter-spacing:3px;cursor:pointer;font-family:inherit;transition:.2s;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);box-shadow:0 8px 30px rgba(0,240,255,.25)}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,240,255,.4)}
 .btn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}.btn.and{background:linear-gradient(90deg,var(--gr),#00b3ff)}
-.term{background:#000;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:10px;height:96px;overflow-y:auto;margin-top:10px;display:none}.term.show{display:block}.term .ok{color:var(--gr)}.term .err{color:var(--rd)}
-.recents div{font-size:10px;color:var(--dim);padding:5px 8px;border:1px dashed #171b28;border-radius:5px;margin:4px 0;cursor:pointer;transition:.2s}.recents div:hover{color:var(--cy);border-color:var(--cy)}
-.note{font-size:9px;color:#39405a;margin-top:10px;word-break:break-all}
+.term{background:#000;border:1px solid var(--line);padding:9px;font-size:10px;height:88px;overflow-y:auto;display:none}.term.show{display:block}.term .ok{color:var(--gr)}.term .err{color:var(--rd)}
+.recents div{font-size:10px;color:var(--dim);padding:5px 8px;border:1px dashed #171b28;margin:4px 0;cursor:pointer;transition:.2s;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+.recents div:hover{color:var(--cy);border-color:var(--cy)}
+.note{font-size:9px;color:#39405a;word-break:break-all}
 #toasts{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:8px;align-items:center}
-.toast{background:#0b0e15;border:1px solid var(--cy);padding:10px 22px;border-radius:8px;font-size:11px;animation:fadeUp .25s;box-shadow:0 12px 40px rgba(0,240,255,.2)}.toast.and{border-color:var(--gr)}
+.toast{background:#0b0e15;border:1px solid var(--cy);padding:10px 22px;font-size:11px;animation:fadeUp .25s;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}.toast.and{border-color:var(--gr)}
 </style>
 </head>
 <body>
-<canvas id="cv"></canvas><div class="gridbg"></div><div id="glow"></div><div class="scan"></div>
+<canvas id="cv"></canvas><div class="hexbg"></div><div class="vig"></div><div class="scan"></div>
 <div id="ticker"><div id="tickin"></div></div>
 <pre id="boot"></pre><div id="bootbar" class="hidden"><i></i></div>
 <div id="gate" class="hidden">
- <div style="text-align:center" class="rev"><div class="logo">CHEAT<span>FORGE</span></div><div class="sub">external cheat foundry · select platform</div></div>
- <div class="cards">
-  <div class="pcard" data-p="win"><h3>WINDOWS</h3><div class="os">x86_64 · pe32+ · external</div>
-   <ul><li>live binaries <b>9</b></li><li>features per title <b>25</b></li><li>reads <b>fresh-ntdll syscalls</b></li><li>pack <b>exe+config+readme</b></li></ul><div class="go">ENTER FOUNDRY →</div></div>
-  <div class="pcard and" data-p="and"><h3>ANDROID</h3><div class="os">arm64-v8a · root · ptrace-free</div>
-   <ul><li>mobile titles <b>5</b></li><li>payload <b>/proc/mem scan+freeze</b></li><li>flow <b>root→inject→launch</b></li><li>standoff 2 <b>cs2 set</b></li></ul><div class="go">ENTER CATALOG →</div></div>
- </div>
- <div class="gfoot"><i class="dot" id="gdot"></i><span id="gstat">win: …</span><i class="dot" id="gdot2"></i><span id="gstat2">android: …</span></div>
+ <div class="slab win" data-p="win"><div class="big">WIN</div><div class="inner">
+  <h2>WINDOWS</h2><div class="tag">x86_64 · pe32+ · external</div>
+  <ul><li>live binaries <b>9</b></li><li>features / title <b>25</b></li><li>reads <b>fresh-ntdll</b></li><li>pack <b>exe+cfg</b></li></ul>
+  <div class="go">ENTER FOUNDRY →</div></div></div>
+ <div class="slab and" data-p="and"><div class="big">AND</div><div class="inner">
+  <h2>ANDROID</h2><div class="tag">arm64-v8a · root · ptrace-free</div>
+  <ul><li>mobile titles <b>5</b></li><li>payload <b>/proc/mem</b></li><li>flow <b>root→inject</b></li><li>standoff <b>cs2 set</b></li></ul>
+  <div class="go">ENTER CATALOG →</div></div></div>
 </div>
 <div id="app" class="hidden">
  <header><button id="back">‹ PLATFORM</button><div class="logo small">CHEAT<span>FORGE</span></div><div class="pill" id="platpill"></div>
   <div class="acc"><span data-c="#00f0ff" style="color:#00f0ff">●</span><span data-c="#00ff88" style="color:#00ff88">●</span><span data-c="#ff9f43" style="color:#ff9f43">●</span></div>
   <div class="dotwrap"><i class="dot" id="dot"></i><span id="dottxt">probing…</span></div></header>
  <main>
-  <aside class="rail rev"><h2>games</h2><input class="inp" id="q" placeholder="search title…"><div id="games"></div></aside>
-  <section class="stage rev" style="animation-delay:.08s"><h2>features · <span id="gcount"></span> <span class="badge" id="tierbadge"></span></h2>
-   <input class="inp" id="fq" placeholder="filter features…">
-   <div class="bulk"><button id="ball">ALL</button><button id="bnone">NONE</button><button id="binv">INVERT</button></div>
-   <div class="warn" id="warn">select at least one feature — build stays locked</div>
-   <div class="rootnote hidden" id="rootnote">⚡ ROOT REQUIRED · unpack zip → Termux: su → sh inject.sh → ptrace-free attach via /proc/mem, scan+freeze stats, auto-launch game.</div>
-   <div id="featswrap"></div><div class="mech" id="mech"></div></section>
-  <aside class="console rev" style="animation-delay:.16s"><h2>build console</h2>
-   <div class="cntrow">selected <b id="cnt">0</b> / <span id="tot">0</span></div>
-   <pre id="cfgprev"></pre><div id="prog"><i></i></div><div id="progpct"></div>
+  <div class="center">
+   <div id="shelfwrap"><div id="shelf"></div></div>
+   <div id="loadhead"><h2>loadout · <span id="gcount"></span> <span class="badge" id="tierbadge"></span></h2>
+    <input class="inp" id="fq" placeholder="filter…">
+    <div class="bulk"><button id="ball">ALL</button><button id="bnone">NONE</button><button id="binv">INV</button></div></div>
+   <div class="warn" id="warn">select at least one feature — deploy locked</div>
+   <div class="rootnote hidden" id="rootnote">⚡ ROOT REQUIRED · unpack → Termux: su → sh inject.sh → ptrace-free /proc/mem, scan+freeze, auto-launch.</div>
+   <div id="padwrap"><div id="pad"></div></div>
+   <div class="mech" id="mech"></div>
+  </div>
+  <div class="deploy">
+   <div class="dialbox">
+    <svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="#141826" stroke-width="7"/><circle id="dialc" cx="48" cy="48" r="40" fill="none" stroke="var(--cy)" stroke-width="7" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3" transform="rotate(-90 48 48)"/></svg>
+    <div><div id="dialt">0</div><div class="lbl">features armed</div></div>
+   </div>
+   <pre id="cfgprev"></pre>
+   <div id="prog"><i></i></div><div id="progpct"></div>
    <button class="btn" id="build" disabled>SELECT FEATURES TO UNLOCK</button>
-   <div class="term" id="term"></div><div class="recents" id="recents"></div><div class="note" id="src"></div></aside>
+   <div class="term" id="term"></div><div class="recents" id="recents"></div><div class="note" id="src"></div>
+  </div>
  </main>
 </div>
 <div id="toasts"></div>
@@ -169,32 +199,33 @@ function syncDot(){const ok=plat==="win"?ST.win:ST.and;$("dot").className="dot"+
 function probe(){return Promise.all([
  fetch(RAW+"CheatForge_cs2.exe?ts="+Date.now(),{method:"HEAD"}).then(r=>ST.win=r.ok).catch(()=>ST.win=false),
  fetch(RAW+"cf_inject_standoff2?ts="+Date.now(),{method:"HEAD"}).then(r=>ST.and=r.ok).catch(()=>ST.and=false)
-]).then(()=>{$("gdot").className="dot"+(ST.win?" ok":" bad");$("gstat").textContent="win: "+(ST.win?"online":"missing");
- $("gdot2").className="dot"+(ST.and?" ok":" bad");$("gstat2").textContent="android: "+(ST.and?"online":"missing");syncDot()})}
+]).then(()=>{syncDot()})}
 function toast(m,and){const t=$("toasts");while(t.children.length>2)t.firstChild.remove();const d=document.createElement("div");d.className="toast"+(and?" and":"");d.textContent=m;t.appendChild(d);setTimeout(()=>d.remove(),2600)}
-function recents(){const r=JSON.parse(localStorage.getItem("cf_rec")||"[]");$("recents").innerHTML=r.length?"<h2>recent builds</h2>":"";
+function recents(){const r=JSON.parse(localStorage.getItem("cf_rec")||"[]");$("recents").innerHTML=r.length?"<h2 style='font-size:9px;letter-spacing:2px;color:var(--dim);margin:6px 0'>RECENT</h2>":"";
  r.slice(0,5).forEach(x=>{const d=document.createElement("div");d.textContent="↺ "+x.p+" / "+x.g+" · "+x.n;d.onclick=()=>{plat=x.p;cur=x.g;showApp()};$("recents").appendChild(d)})}
 function pushRec(p,g,n){let r=JSON.parse(localStorage.getItem("cf_rec")||"[]");r=r.filter(x=>!(x.p===p&&x.g===g));r.unshift({p,g,n});localStorage.setItem("cf_rec",JSON.stringify(r.slice(0,6)));recents()}
 function R(){
- const G=T(),q=($("q").value||"").toLowerCase();
+ const G=T();
  $("platpill").textContent=plat==="win"?"windows · x86_64":"android · arm64";$("platpill").className="pill"+(plat==="and"?" and":"");
- $("games").innerHTML=Object.entries(G).filter(([k,v])=>v.n.toLowerCase().includes(q)).map(([k,v],i)=>`<div class="game rev ${plat==='and'?'and':''} ${k===cur?'active':''}" style="animation-delay:${i*40}ms" data-g="${k}"><div class="emblem">${EMB[v.n]||v.n.split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase()}</div><div><b>${v.n}</b><small>${v.proc}</small><span class="badge b-${v.tier}">${v.tier==="mem"?"MEMORY":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT":"ROOT"}</span></div></div>`).join("");
- document.querySelectorAll(".game").forEach(e=>e.onclick=()=>{cur=e.dataset.g;R()});
+ $("shelf").innerHTML=Object.entries(G).map(([k,v],i)=>`<div class="tile rev ${k===cur?'on':''} ${plat==='and'?'and':''}" style="animation-delay:${i*40}ms" data-g="${k}"><div class="tin"><div class="emblem">${EMB[v.n]||v.n.split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase()}</div><b>${v.n}</b><small>${v.proc}</small><span class="badge b-${v.tier}">${v.tier==="mem"?"MEM":v.tier==="screen"?"SCREEN":v.tier==="input"?"INPUT":"ROOT"}</span></div></div>`).join("");
+ document.querySelectorAll(".tile").forEach(e=>e.onclick=()=>{cur=e.dataset.g;R()});
  const v=G[cur],F=parseF(v),fq=($("fq").value||"").toLowerCase();
  $("gcount").textContent=F.length;
  $("tierbadge").className="badge b-"+v.tier;$("tierbadge").textContent=v.tier==="mem"?"MEMORY":v.tier==="screen"?"SCREEN+INPUT":v.tier==="input"?"INPUT":"ROOT /proc/mem";
  $("rootnote").className="rootnote"+(plat==="and"?"":" hidden");
  const byG={};F.filter(f=>f[0].includes(fq)||f[1].toLowerCase().includes(fq)).forEach(f=>{const g=plat==="and"?"root inject":(f[0][0]==="m"?"memory read":f[0][0]==="c"?"screen / color":f[0][0]==="i"?"input / macros":"overlay draw");(byG[g]=byG[g]||[]).push(f)});
  let fi=0;
- $("featswrap").innerHTML=Object.entries(byG).map(([g,l])=>`<div class="grouph">${g} · ${l.length}</div><div class="fgrid">`+l.map(f=>`<div class="feat rev ${sel[cur].has(f[0])?'on':''} ${plat==='and'?'and':''}" style="animation-delay:${(fi++)*25}ms" data-n="${f[0]}"><b>${f[1]}</b><small>${f[0]}</small></div>`).join("")+"</div>").join("");
- document.querySelectorAll(".feat").forEach(e=>e.onclick=()=>{const n=e.dataset.n;sel[cur].has(n)?sel[cur].delete(n):sel[cur].add(n);R()});
+ $("pad").innerHTML=Object.entries(byG).map(([g,l])=>`<div class="grouph" style="grid-column:1/-1">${g} · ${l.length}</div>`+l.map(f=>`<div class="cell ${sel[cur].has(f[0])?'on':''} ${plat==='and'?'and':''}" style="--d:${(fi++)*22}ms" data-n="${f[0]}"><b>${f[1]}</b><small>${f[0]}</small></div>`).join("")).join("");
+ document.querySelectorAll(".cell").forEach(e=>e.onclick=()=>{const n=e.dataset.n;sel[cur].has(n)?sel[cur].delete(n):sel[cur].add(n);R()});
  $("mech").textContent=v.mech;
- const ns=sel[cur].size;$("cnt").textContent=ns;$("tot").textContent=F.length;
+ const ns=sel[cur].size;
+ $("dialt").textContent=ns;
+ $("dialc").style.strokeDashoffset=(251.3*(1-ns/Math.max(1,F.length))).toFixed(1);
  $("warn").className="warn"+(ns===0?" show":"");
  $("cfgprev").innerHTML=JSON.stringify({platform:plat,game:cur,pkg:v.proc,tier:v.tier,features:[...sel[cur]]},null,1).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"([^"]+)":/g,'<i>"$1"</i>:').replace(/: "([^"]*)"/g,': <b>"$1"</b>').replace(/\b(\d+)\b/g,"<u>$1</u>");
  const b=$("build"),isAnd=plat==="and",bin=isAnd?"cf_inject_"+cur:"CheatForge_"+cur+".exe";
  b.className="btn"+(isAnd?" and":"");b.disabled=ns===0;
- b.textContent=ns===0?"SELECT FEATURES TO UNLOCK":(isAnd?"DOWNLOAD ROOT INJECTOR (.zip)":"DOWNLOAD REAL CHEAT (.zip)");
+ b.textContent=ns===0?"SELECT FEATURES TO UNLOCK":(isAnd?"DEPLOY ROOT INJECTOR":"DEPLOY REAL CHEAT");
  $("src").textContent="source: "+RAW+bin;syncDot();
 }
 $("ball").onclick=()=>{parseF(T()[cur]).forEach(f=>sel[cur].add(f[0]));R()};
@@ -215,7 +246,7 @@ $("build").onclick=async()=>{
  if(isAnd){
   zip.file("cf_inject",blob);zip.file("config.json",JSON.stringify(cfg,null,2));
   zip.file("inject.sh","#!/system/bin/sh\nD=/data/local/tmp\ncp \"$(dirname \"$0\")/cf_inject\" $D/.logd_worker&&chmod 755 $D/.logd_worker\ncp \"$(dirname \"$0\")/config.json\" $D/cf_config.json\necho \"[cf] inject "+v.proc+" (grant root)\"\n$D/.logd_worker -inject "+v.proc+" &\nsleep 2\nam start -n "+v.proc+"/.MainActivity 2>/dev/null || monkey -p "+v.proc+" -c android.intent.category.LAUNCHER 1\necho \"[cf] done\"\n");
-  zip.file("README.txt","CheatForge ROOT injector v2 - "+v.n+"\nroot required. Termux: su then sh inject.sh\nno ptrace: TracerPid stays 0; /proc/mem rw + scan/freeze\nfeatures: "+feats.join(", ")+"\n");
+  zip.file("README.txt","CheatForge ROOT injector v2 - "+v.n+"\nroot required. Termux: su then sh inject.sh\nfeatures: "+feats.join(", ")+"\n");
  }else{
   zip.file(bin,blob);zip.file("config.json",JSON.stringify(cfg,null,2));
   zip.file("README.txt","CheatForge v10 - "+v.n+"\n1) unpack all into ONE folder\n2) run "+bin+" as admin\n3) menu shows ONLY these features; INSERT toggles menu\n4) END = exit\nfeatures: "+feats.join(", ")+"\n"+v.mech+"\n");
@@ -223,47 +254,32 @@ $("build").onclick=async()=>{
  log("zipping...");
  saveAs(await zip.generateAsync({type:"blob"}),(isAnd?"CF_RootInject_"+cur:"CheatForge_"+cur+"_real")+".zip");
  prog(100);log("done","ok");pushRec(plat,cur,feats.length);
- toast("packed: "+cur+" · "+feats.length, isAnd);
+ toast("deployed: "+cur+" · "+feats.length, isAnd);
  setTimeout(()=>prog(0),1200);b.disabled=false;R();
 };
 function showApp(){$("gate").classList.add("hidden");$("app").classList.remove("hidden");R();recents()}
 function showGate(){$("app").classList.add("hidden");$("gate").classList.remove("hidden");probe()}
-document.querySelectorAll(".pcard").forEach(c=>{
- c.onclick=()=>{plat=c.dataset.p;cur=plat==="win"?"cs2":"standoff2";showApp()};
- c.onmousemove=e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
-  c.style.setProperty("--mx",((e.clientX-r.left)/r.width*100)+"%");c.style.setProperty("--my",((e.clientY-r.top)/r.height*100)+"%");
-  c.style.transform=`perspective(900px) rotateY(${x*7}deg) rotateX(${-y*7}deg) translateY(-5px)`};
- c.onmouseleave=()=>c.style.transform="";
-});
+document.querySelectorAll(".slab").forEach(c=>c.onclick=()=>{plat=c.dataset.p;cur=plat==="win"?"cs2":"standoff2";showApp()});
 $("back").onclick=showGate;
-$("q").oninput=R;$("fq").oninput=R;
+$("fq").oninput=R;
 document.querySelectorAll(".acc span").forEach(e=>e.onclick=()=>{document.documentElement.style.setProperty("--cy",e.dataset.c);toast("accent "+e.dataset.c)});
-// particles + cursor glow
-const cv=$("cv"),cx=cv.getContext("2d");let P=[],mx=innerWidth/2,my=innerHeight/2,gx=mx,gy=my;
+const cv=$("cv"),cx=cv.getContext("2d");let P=[];
 function rs(){cv.width=innerWidth;cv.height=innerHeight}onresize=rs;rs();
-for(let i=0;i<70;i++)P.push([Math.random()*cv.width,Math.random()*cv.height,Math.random()*.5-.25,Math.random()*.5-.25]);
-addEventListener("mousemove",e=>{mx=e.clientX;my=e.clientY});
+for(let i=0;i<60;i++)P.push([Math.random()*cv.width,Math.random()*cv.height,Math.random()*.4-.2,Math.random()*.4-.2]);
 (function loop(){cx.clearRect(0,0,cv.width,cv.height);
- gx+=(mx-gx)*.08;gy+=(my-gy)*.08;$("glow").style.left=gx+"px";$("glow").style.top=gy+"px";
- for(const p of P){let dx=p[0]-mx,dy=p[1]-my,d2=dx*dx+dy*dy;
-  if(d2<12000){p[0]+=dx*.02;p[1]+=dy*.02}
-  p[0]+=p[2];p[1]+=p[3];if(p[0]<0||p[0]>cv.width)p[2]*=-1;if(p[1]<0||p[1]>cv.height)p[3]*=-1;
-  cx.fillStyle="rgba(0,240,255,.4)";cx.fillRect(p[0],p[1],1.5,1.5)}
- cx.strokeStyle="rgba(0,240,255,.05)";
+ for(const p of P){p[0]+=p[2];p[1]+=p[3];if(p[0]<0||p[0]>cv.width)p[2]*=-1;if(p[1]<0||p[1]>cv.height)p[3]*=-1;
+  cx.fillStyle="rgba(0,240,255,.35)";cx.fillRect(p[0],p[1],1.4,1.4)}
+ cx.strokeStyle="rgba(0,240,255,.045)";
  for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const dx=P[i][0]-P[j][0],dy=P[i][1]-P[j][1];if(dx*dx+dy*dy<9000){cx.beginPath();cx.moveTo(P[i][0],P[i][1]);cx.lineTo(P[j][0],P[j][1]);cx.stroke()}}
  requestAnimationFrame(loop)})();
-// ticker
 $("tickin").innerHTML=(Object.values(WIN).concat(Object.values(AND)).map(v=>"<b>"+v.n.toUpperCase()+"</b> · ").join("")).repeat(2);
-// count-up
-function countUp(){document.querySelectorAll(".pcard li b").forEach(b=>{const t=parseInt(b.textContent);if(isNaN(t))return;let c=0;const iv=setInterval(()=>{c+=Math.max(1,Math.round(t/15));if(c>=t){c=t;clearInterval(iv)}b.textContent=c},40)})}
-// boot
 probe().then(()=>{
- const L=["CHEATFORGE BIOS v10","mem check ............ ok","particle field ....... ok","win builds ........... "+(ST.win?"online":"MISSING"),"android injectors .... "+(ST.and?"online":"MISSING"),"ui subsystem ......... ok","","boot complete."];
+ const L=["CHEATFORGE BIOS v11","cockpit ui ........... ok","win builds ........... "+(ST.win?"online":"MISSING"),"android injectors .... "+(ST.and?"online":"MISSING"),"","boot complete."];
  $("bootbar").classList.remove("hidden");
  let i=0,bb="";
  (function type(){bb+=L[i]+"\n";$("boot").textContent=bb;$("bootbar").firstElementChild.style.width=((i+1)/L.length*100)+"%";i++;
   if(i<L.length)setTimeout(type,150);
-  else setTimeout(()=>{$("boot").classList.add("hidden");$("bootbar").classList.add("hidden");$("gate").classList.remove("hidden");countUp()},400);
+  else setTimeout(()=>{$("boot").classList.add("hidden");$("bootbar").classList.add("hidden");$("gate").classList.remove("hidden")},400);
  })();
 });
 </script>
