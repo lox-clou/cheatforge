@@ -54,3 +54,6 @@ o.hpp
 c.hpp
 build_all.sh
 generate_cheats.py
+build.sh
+offsets_gen.h
+real-cheat/
