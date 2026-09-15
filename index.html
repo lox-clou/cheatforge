@@ -123,6 +123,27 @@ main{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 24px
 .note{font-size:9px;color:#39405a;word-break:break-all}
 #toasts{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:8px;align-items:center}
 .toast{background:#0b0e15;border:1px solid var(--cy);padding:10px 22px;font-size:11px;animation:fadeUp .25s;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}.toast.and{border-color:var(--gr)}
+
+@media(max-width:900px){
+ body{overflow:auto;height:auto}
+ #gate{flex-direction:column;height:auto;min-height:100vh;padding:30px 0 0}
+ .slab{flex:none;width:100%;min-height:44vh}
+ .slab.win{clip-path:polygon(0 0,100% 0,100% calc(100% - 5vh),0 100%)}
+ .slab.and{clip-path:polygon(0 5vh,100% 0,100% 100%,0 100%);margin-top:-5vh;margin-left:0}
+ .slab:hover{flex:none}
+ .slab h2{font-size:34px}
+ .slab .tag{letter-spacing:2px}
+ .slab li{min-width:0}
+ .slab .big{font-size:110px;bottom:-20px}
+ .slab .inner{padding:14px}
+ header{padding-top:30px}
+ main{grid-template-columns:1fr;height:auto}
+ .center{border-right:0}
+ #padwrap{overflow:visible;flex:none}
+ #pad{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+ .deploy{border-top:1px solid var(--line)}
+ .dialbox svg{width:76px;height:76px}
+}
 </style>
 </head>
 <body>
